@@ -3,6 +3,12 @@ SHELL := /bin/sh
 
 include .env
 
+export COMPANIES_HTTP_ADDR
+export COMPANIES_DATABASE_URL
+export COMPANIES_JWT_SECRET
+export COMPANIES_JWT_ISSUER
+export COMPANIES_JWT_AUDIENCE
+
 .PHONY: generate
 generate: ## Generate HTTP port from the OpenAPI contract.
 	go generate ./api
@@ -10,6 +16,10 @@ generate: ## Generate HTTP port from the OpenAPI contract.
 .PHONY: deps
 deps: ## Start local dependencies.
 	docker compose up
+
+.PHONY: run
+run: ## Run the service.
+	go run ./cmd/companies
 
 .PHONY: db-shell
 db-shell:

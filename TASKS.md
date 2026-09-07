@@ -9,3 +9,4 @@
 [x] Define and implement domain services (create, update, delete, findOne)
 [x] Define openapi spec, automate generation and generate http port (CreateCompany, UpdateCompany, DeleteCompany, GetCompany)
 [x] Define and implement the http port
+[x] Create the main entrypoint

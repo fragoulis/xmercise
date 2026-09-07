@@ -68,6 +68,16 @@ Rollback the latest migration:
 make migrate-down
 ```
 
+## Run the service
+
+Start the API after applying migrations:
+
+```sh
+make run
+```
+
+The server listens on `COMPANIES_HTTP_ADDR`. Requests require an HS256 bearer token with `sub`, `exp`, and `iat` claims, signed with `COMPANIES_JWT_SECRET`.
+
 ## Useful commands
 
 Open a PostgreSQL shell:
