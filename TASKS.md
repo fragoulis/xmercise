@@ -6,6 +6,6 @@
 [x] Setup database migrations
 [x] Define and implement domain models (company)
 [x] Define and implement the db adapter
-[ ] Define and implement domain services (create, update, delete, findOne)
-[ ] Define openapi spec and automate generation
+[x] Define and implement domain services (create, update, delete, findOne)
+[ ] Define openapi spec, automate generation and generate http port (CreateCompany, UpdateCompany, DeleteCompany, GetCompany)
 [ ] Define and implement the http port

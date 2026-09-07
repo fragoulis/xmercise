@@ -13,18 +13,16 @@
   - Concurrent updates rely on database transaction locking.
   - PATCH and DELETE select the company row `FOR UPDATE` inside the transaction.
   - Companies include `created_at` and `updated_at` timestamps in DB, domain, and API responses.
-  - Timestamps are assigned in the domain/application flow, not by database defaults.
-  - Timestamps must be UTC.
-  - Application services receive a Clock interface. Production clock returns UTC; tests can use fixed time.
+  - Timestamps are assigned by the domain model with `time.Now()`, not by application services or database defaults.
 - Architecture: DDD-oriented layering.
   - Interfaces/adapters layer decodes and encodes only.
-  - Application layer owns use cases, validation, authorization context, transactions, and outbox creation.
+  - Application layer owns use cases, validation, transactions, and outbox creation.
   - Domain layer owns entities, value objects, invariants, and domain events.
   - Infrastructure layer persists primitives/strings and integrates external systems.
   - Persistence reads use `company.NewFromDB` from stored state without revalidating.
   - Validate business rules in one place, not separately in HTTP and database layers.
   - go-playground/validator runs on application command structs.
-- Authentication: JWT bearer auth for all endpoints.
+- Authentication: HTTP middleware authenticates JWT bearer tokens for all endpoints.
   - No login/user management endpoint unless later required.
   - Dev/test tokens are generated from configured signing settings.
   - JWT algorithm: HS256.
@@ -38,7 +36,7 @@
   - `outbox_events` table columns: `id uuid primary key`, `event_type text not null`, `aggregate_type text not null`, `aggregate_id uuid not null`, `occurred_at timestamptz not null`, `payload jsonb not null`, `created_at timestamptz not null`, `published_at timestamptz null`, `attempts integer not null`, `last_error text null`.
   - Outbox polling uses an index over unpublished events.
   - Database schema does not use validation checks or defaults for application-owned values.
-  - Event payload includes `event_id`, `event_type`, `occurred_at`, `company_id`, `actor_sub`, and `data`.
+  - Event payload includes `event_id`, `event_type`, `occurred_at`, `company_id`, and `data`.
   - `data` contains after-state for create/update and minimal ID data for delete.
   - Kafka topic: `companies.events`.
   - Kafka message key: `company_id`.

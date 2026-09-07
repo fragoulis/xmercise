@@ -48,7 +48,6 @@ type CreateInput struct {
 	EmployeesCount int
 	Registered     bool
 	Type           Type
-	CreatedAt      time.Time
 }
 
 // UpdateInput contains patch data for an existing company.
@@ -58,7 +57,6 @@ type UpdateInput struct {
 	EmployeesCount *int
 	Registered     *bool
 	Type           *Type
-	UpdatedAt      time.Time
 }
 
 // DescriptionPatch represents an omitted, cleared, or replaced description.
@@ -98,7 +96,7 @@ func New(input CreateInput) (*Company, CompanyCreatedEvent, error) {
 		id = uuid.New()
 	}
 
-	createdAt := utc(input.CreatedAt)
+	createdAt := time.Now()
 	state := StoredState{
 		ID:             id,
 		Name:           input.Name,
@@ -158,7 +156,7 @@ func (c *Company) Update(input UpdateInput) (CompanyUpdatedEvent, error) {
 		Registered:     registered,
 		Type:           companyType,
 		CreatedAt:      c.createdAt,
-		UpdatedAt:      utc(input.UpdatedAt),
+		UpdatedAt:      time.Now(),
 	}
 	if err := validateStoredState(state); err != nil {
 		return CompanyUpdatedEvent{}, err
@@ -173,10 +171,10 @@ func (c *Company) Update(input UpdateInput) (CompanyUpdatedEvent, error) {
 }
 
 // Deleted returns the domain event for a hard delete.
-func (c *Company) Deleted(at time.Time) CompanyDeletedEvent {
+func (c *Company) Deleted() CompanyDeletedEvent {
 	return CompanyDeletedEvent{
 		CompanyID:  c.id,
-		OccurredAt: utc(at),
+		OccurredAt: time.Now(),
 	}
 }
 
@@ -232,8 +230,8 @@ func fromStoredState(state StoredState) *Company {
 		employeesCount: state.EmployeesCount,
 		registered:     state.Registered,
 		companyType:    state.Type,
-		createdAt:      utc(state.CreatedAt),
-		updatedAt:      utc(state.UpdatedAt),
+		createdAt:      state.CreatedAt,
+		updatedAt:      state.UpdatedAt,
 	}
 }
 
@@ -277,12 +275,4 @@ func copyDescription(description *string) *string {
 	}
 
 	return lo.ToPtr(*description)
-}
-
-func utc(value time.Time) time.Time {
-	if value.IsZero() {
-		return time.Time{}
-	}
-
-	return value.UTC()
 }

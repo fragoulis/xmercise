@@ -18,6 +18,8 @@ import (
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 
+	appcompany "github.com/fragoulis/xmercise/internal/application/company"
+	"github.com/fragoulis/xmercise/internal/application/outbox"
 	"github.com/fragoulis/xmercise/internal/domain/company"
 	"github.com/fragoulis/xmercise/internal/infrastructure/postgres"
 )
@@ -35,18 +37,17 @@ func TestStorePersistsCompanyAndOutboxInTransaction(t *testing.T) {
 		EmployeesCount: 7,
 		Registered:     true,
 		Type:           company.TypeCorporations,
-		CreatedAt:      time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC),
 	})
 	if err != nil {
 		t.Fatalf("new company: %v", err)
 	}
 
-	err = store.WithinTx(ctx, func(ctx context.Context, tx *postgres.Tx) error {
+	err = store.WithinTx(ctx, func(ctx context.Context, tx appcompany.Tx) error {
 		if err := tx.InsertCompany(ctx, created); err != nil {
 			return err
 		}
 
-		return tx.InsertOutboxEvent(ctx, postgres.OutboxEvent{
+		return tx.InsertOutboxEvent(ctx, outbox.Event{
 			ID:            uuid.New(),
 			EventType:     string(event.Type()),
 			AggregateType: event.AggregateType(),
@@ -87,14 +88,12 @@ func TestStoreUpdatesDeletesAndMapsErrors(t *testing.T) {
 	pool := newPostgresPool(t, ctx)
 	store := postgres.NewStore(pool)
 
-	createdAt := time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
 	created, _, err := company.New(company.CreateInput{
 		ID:             uuid.New(),
 		Name:           "Acme",
 		EmployeesCount: 7,
 		Registered:     true,
 		Type:           company.TypeCorporations,
-		CreatedAt:      createdAt,
 	})
 	if err != nil {
 		t.Fatalf("new company: %v", err)
@@ -109,7 +108,6 @@ func TestStoreUpdatesDeletesAndMapsErrors(t *testing.T) {
 		EmployeesCount: 1,
 		Registered:     false,
 		Type:           company.TypeCooperative,
-		CreatedAt:      createdAt,
 	})
 	if err != nil {
 		t.Fatalf("new duplicate company: %v", err)
@@ -119,15 +117,14 @@ func TestStoreUpdatesDeletesAndMapsErrors(t *testing.T) {
 	}
 
 	newName := "Beta"
-	err = store.WithinTx(ctx, func(ctx context.Context, tx *postgres.Tx) error {
+	err = store.WithinTx(ctx, func(ctx context.Context, tx appcompany.Tx) error {
 		locked, err := tx.FindCompanyByIDForUpdate(ctx, created.ID())
 		if err != nil {
 			return err
 		}
 
 		if _, err := locked.Update(company.UpdateInput{
-			Name:      &newName,
-			UpdatedAt: createdAt.Add(time.Hour),
+			Name: &newName,
 		}); err != nil {
 			return err
 		}
@@ -165,14 +162,13 @@ func TestStoreRollsBackTransaction(t *testing.T) {
 		EmployeesCount: 7,
 		Registered:     true,
 		Type:           company.TypeCorporations,
-		CreatedAt:      time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC),
 	})
 	if err != nil {
 		t.Fatalf("new company: %v", err)
 	}
 
 	rollbackErr := errors.New("rollback")
-	err = store.WithinTx(ctx, func(ctx context.Context, tx *postgres.Tx) error {
+	err = store.WithinTx(ctx, func(ctx context.Context, tx appcompany.Tx) error {
 		if err := tx.InsertCompany(ctx, created); err != nil {
 			return err
 		}

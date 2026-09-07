@@ -3,15 +3,15 @@ package postgres
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	appcompany "github.com/fragoulis/xmercise/internal/application/company"
+	"github.com/fragoulis/xmercise/internal/application/outbox"
 	"github.com/fragoulis/xmercise/internal/domain/company"
 )
 
@@ -19,9 +19,9 @@ const uniqueViolationCode = "23505"
 
 var (
 	// ErrCompanyNotFound means the requested company row does not exist.
-	ErrCompanyNotFound = errors.New("company not found")
+	ErrCompanyNotFound = appcompany.ErrCompanyNotFound
 	// ErrCompanyNameTaken means another company already uses the same name ignoring case.
-	ErrCompanyNameTaken = errors.New("company name taken")
+	ErrCompanyNameTaken = appcompany.ErrCompanyNameTaken
 )
 
 // Store persists application data in PostgreSQL.
@@ -32,17 +32,6 @@ type Store struct {
 // Tx is a PostgreSQL transaction-scoped adapter.
 type Tx struct {
 	tx pgx.Tx
-}
-
-// OutboxEvent is the database representation of an unpublished outbox event.
-type OutboxEvent struct {
-	ID            uuid.UUID
-	EventType     string
-	AggregateType string
-	AggregateID   uuid.UUID
-	OccurredAt    time.Time
-	Payload       json.RawMessage
-	CreatedAt     time.Time
 }
 
 type executor interface {
@@ -58,7 +47,7 @@ func NewStore(pool *pgxpool.Pool) *Store {
 }
 
 // WithinTx runs fn inside a database transaction.
-func (s *Store) WithinTx(ctx context.Context, fn func(ctx context.Context, tx *Tx) error) error {
+func (s *Store) WithinTx(ctx context.Context, fn func(ctx context.Context, tx appcompany.Tx) error) error {
 	dbTx, err := s.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return err
@@ -121,7 +110,7 @@ func (t *Tx) DeleteCompany(ctx context.Context, id uuid.UUID) error {
 }
 
 // InsertOutboxEvent inserts an unpublished outbox event inside the transaction.
-func (t *Tx) InsertOutboxEvent(ctx context.Context, event OutboxEvent) error {
+func (t *Tx) InsertOutboxEvent(ctx context.Context, event outbox.Event) error {
 	_, err := t.tx.Exec(ctx, `
 		INSERT INTO outbox_events (
 			id, event_type, aggregate_type, aggregate_id, occurred_at, payload, created_at, attempts

@@ -12,7 +12,6 @@ import (
 )
 
 func TestNewCreatesCompanyAndEvent(t *testing.T) {
-	now := time.Date(2026, 1, 2, 3, 4, 5, 0, time.FixedZone("offset", 2*60*60))
 	description := "shipping"
 	id := uuid.New()
 
@@ -23,7 +22,6 @@ func TestNewCreatesCompanyAndEvent(t *testing.T) {
 		EmployeesCount: 7,
 		Registered:     true,
 		Type:           company.TypeCorporations,
-		CreatedAt:      now,
 	})
 	if err != nil {
 		t.Fatalf("new company: %v", err)
@@ -32,8 +30,8 @@ func TestNewCreatesCompanyAndEvent(t *testing.T) {
 	if c.ID() != id {
 		t.Fatalf("id = %s, want %s", c.ID(), id)
 	}
-	if c.CreatedAt().Location() != time.UTC {
-		t.Fatalf("created location = %v, want UTC", c.CreatedAt().Location())
+	if c.CreatedAt().IsZero() {
+		t.Fatal("created_at is zero")
 	}
 	if c.UpdatedAt() != c.CreatedAt() {
 		t.Fatalf("updated_at = %s, want created_at %s", c.UpdatedAt(), c.CreatedAt())
@@ -52,7 +50,6 @@ func TestNewGeneratesID(t *testing.T) {
 		EmployeesCount: 7,
 		Registered:     true,
 		Type:           company.TypeCorporations,
-		CreatedAt:      time.Now(),
 	})
 	if err != nil {
 		t.Fatalf("new company: %v", err)
@@ -74,7 +71,6 @@ func TestNewRejectsInvalidCompany(t *testing.T) {
 		EmployeesCount: -1,
 		Registered:     false,
 		Type:           company.Type("LLC"),
-		CreatedAt:      time.Time{},
 	})
 	if err == nil {
 		t.Fatal("expected validation error")
@@ -85,7 +81,7 @@ func TestNewRejectsInvalidCompany(t *testing.T) {
 		t.Fatalf("error = %T, want ValidationError", err)
 	}
 
-	wantFields := []string{"name", "description", "employees_count", "created_at", "updated_at"}
+	wantFields := []string{"name", "description", "employees_count"}
 	for _, field := range wantFields {
 		if !hasViolation(validationErr, field) {
 			t.Fatalf("missing violation for %q in %#v", field, validationErr.Violations)
@@ -118,23 +114,21 @@ func TestNewFromDBRecreatesPersistedState(t *testing.T) {
 	if !ok || loadedDescription != "shipping" {
 		t.Fatalf("description = %q, %t; want shipping, true", loadedDescription, ok)
 	}
-	if c.CreatedAt().Location() != time.UTC {
-		t.Fatalf("created location = %v, want UTC", c.CreatedAt().Location())
+	if c.CreatedAt() != createdAt {
+		t.Fatalf("created_at = %s, want %s", c.CreatedAt(), createdAt)
 	}
-	if c.UpdatedAt().Location() != time.UTC {
-		t.Fatalf("updated location = %v, want UTC", c.UpdatedAt().Location())
+	if c.UpdatedAt() != updatedAt {
+		t.Fatalf("updated_at = %s, want %s", c.UpdatedAt(), updatedAt)
 	}
 }
 
 func TestUpdatePatchesCompany(t *testing.T) {
-	createdAt := time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
 	c, _, err := company.New(company.CreateInput{
 		ID:             uuid.New(),
 		Name:           "Acme",
 		EmployeesCount: 7,
 		Registered:     true,
 		Type:           company.TypeCorporations,
-		CreatedAt:      createdAt,
 	})
 	if err != nil {
 		t.Fatalf("new company: %v", err)
@@ -144,7 +138,6 @@ func TestUpdatePatchesCompany(t *testing.T) {
 	employeesCount := 11
 	registered := false
 	companyType := company.TypeCooperative
-	updatedAt := createdAt.Add(time.Hour)
 
 	event, err := c.Update(company.UpdateInput{
 		Name:           &name,
@@ -152,7 +145,6 @@ func TestUpdatePatchesCompany(t *testing.T) {
 		EmployeesCount: &employeesCount,
 		Registered:     &registered,
 		Type:           &companyType,
-		UpdatedAt:      updatedAt,
 	})
 	if err != nil {
 		t.Fatalf("update company: %v", err)
@@ -185,13 +177,12 @@ func TestDeletedReturnsEvent(t *testing.T) {
 		EmployeesCount: 7,
 		Registered:     true,
 		Type:           company.TypeCorporations,
-		CreatedAt:      time.Now(),
 	})
 	if err != nil {
 		t.Fatalf("new company: %v", err)
 	}
 
-	event := c.Deleted(time.Now())
+	event := c.Deleted()
 
 	if event.Type() != company.EventTypeCompanyDeleted {
 		t.Fatalf("event type = %s, want %s", event.Type(), company.EventTypeCompanyDeleted)
