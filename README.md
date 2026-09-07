@@ -1,13 +1,14 @@
 # Companies Service
 
-Microservice for managing companies. Current repository state includes local PostgreSQL setup and database migrations.
+Microservice for managing companies.
 
 ## Prerequisites
 
 - Docker and Docker Compose
 - Go, for running `go install` and later the service
-- `make`
+- `make` (optional, it is just helpful)
 - `goose` migration CLI
+- `golangci-lint` linter
 
 Install goose if needed:
 
@@ -15,10 +16,10 @@ Install goose if needed:
 go install github.com/pressly/goose/v3/cmd/goose@latest
 ```
 
-Make sure your Go bin directory is on `PATH`:
+Install golangci-lint if needed:
 
 ```sh
-export PATH="$(go env GOPATH)/bin:$PATH"
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 ```
 
 ## Configure environment
