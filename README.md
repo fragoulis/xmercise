@@ -10,13 +10,13 @@ Microservice for managing companies.
 - `goose` migration CLI
 - `golangci-lint` linter
 
-Install goose if needed:
+Install `goose` if needed:
 
 ```sh
 go install github.com/pressly/goose/v3/cmd/goose@latest
 ```
 
-Install golangci-lint if needed:
+Install `golangci-lint` if needed:
 
 ```sh
 go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
@@ -30,14 +30,6 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
-The default values start a local PostgreSQL database and build this database URL:
-
-```sh
-postgres://root:password@localhost:5432/exercise?sslmode=disable
-```
-
-Change `.env` if you need different local credentials or port.
-
 ## Start the database
 
 Start PostgreSQL with Docker Compose:
@@ -46,13 +38,7 @@ Start PostgreSQL with Docker Compose:
 make deps
 ```
 
-This runs PostgreSQL in the foreground. In another terminal, continue with migrations.
-
-If you prefer detached mode:
-
-```sh
-docker compose up -d
-```
+This starts PostgreSQL in the foreground. In another terminal, continue with migrations.
 
 ## Run migrations
 
@@ -88,14 +74,10 @@ Create a new migration:
 make migrate-create name=create_example_table
 ```
 
-Stop local dependencies:
+## Clean up
+
+Remove local database data:
 
 ```sh
-docker compose down
-```
-
-Remove local database data too:
-
-```sh
-docker compose down -v
+make clean-up
 ```
