@@ -5,6 +5,7 @@
 [x] Setup docker compose (postgres)
 [x] Setup database migrations
 [x] Define and implement domain models (company)
+[x] Define and implement the db adapter
 [ ] Define and implement domain services (create, update, delete, findOne)
 [ ] Define openapi spec and automate generation
 [ ] Define and implement the http port

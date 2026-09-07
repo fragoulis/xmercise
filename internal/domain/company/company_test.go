@@ -96,6 +96,36 @@ func TestNewRejectsInvalidCompany(t *testing.T) {
 	}
 }
 
+func TestNewFromDBRecreatesPersistedState(t *testing.T) {
+	description := "shipping"
+	createdAt := time.Date(2026, 1, 2, 3, 4, 5, 0, time.FixedZone("offset", 2*60*60))
+	updatedAt := createdAt.Add(time.Hour)
+	id := uuid.New()
+
+	c := company.NewFromDB(company.StoredState{
+		ID:             id,
+		Name:           "Acme",
+		Description:    &description,
+		EmployeesCount: 7,
+		Registered:     true,
+		Type:           company.TypeCorporations,
+		CreatedAt:      createdAt,
+		UpdatedAt:      updatedAt,
+	})
+	description = "changed"
+
+	loadedDescription, ok := c.Description()
+	if !ok || loadedDescription != "shipping" {
+		t.Fatalf("description = %q, %t; want shipping, true", loadedDescription, ok)
+	}
+	if c.CreatedAt().Location() != time.UTC {
+		t.Fatalf("created location = %v, want UTC", c.CreatedAt().Location())
+	}
+	if c.UpdatedAt().Location() != time.UTC {
+		t.Fatalf("updated location = %v, want UTC", c.UpdatedAt().Location())
+	}
+}
+
 func TestUpdatePatchesCompany(t *testing.T) {
 	createdAt := time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
 	c, _, err := company.New(company.CreateInput{

@@ -67,6 +67,18 @@ type DescriptionPatch struct {
 	Value   *string
 }
 
+// StoredState is the persisted company state used by storage adapters.
+type StoredState struct {
+	ID             uuid.UUID
+	Name           string
+	Description    *string
+	EmployeesCount int
+	Registered     bool
+	Type           Type
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
 // Company is the company aggregate root.
 type Company struct {
 	id             uuid.UUID
@@ -87,19 +99,21 @@ func New(input CreateInput) (*Company, CompanyCreatedEvent, error) {
 	}
 
 	createdAt := utc(input.CreatedAt)
-	c, err := Restore(
-		id,
-		input.Name,
-		copyDescription(input.Description),
-		input.EmployeesCount,
-		input.Registered,
-		input.Type,
-		createdAt,
-		createdAt,
-	)
-	if err != nil {
+	state := StoredState{
+		ID:             id,
+		Name:           input.Name,
+		Description:    copyDescription(input.Description),
+		EmployeesCount: input.EmployeesCount,
+		Registered:     input.Registered,
+		Type:           input.Type,
+		CreatedAt:      createdAt,
+		UpdatedAt:      createdAt,
+	}
+	if err := validateStoredState(state); err != nil {
 		return nil, CompanyCreatedEvent{}, err
 	}
+
+	c := fromStoredState(state)
 
 	return c, CompanyCreatedEvent{
 		CompanyID:  c.id,
@@ -107,35 +121,9 @@ func New(input CreateInput) (*Company, CompanyCreatedEvent, error) {
 	}, nil
 }
 
-// Restore recreates a company from persistence.
-func Restore(
-	id uuid.UUID,
-	name string,
-	description *string,
-	employeesCount int,
-	registered bool,
-	companyType Type,
-	createdAt time.Time,
-	updatedAt time.Time,
-) (*Company, error) {
-	description = copyDescription(description)
-	createdAt = utc(createdAt)
-	updatedAt = utc(updatedAt)
-
-	if err := validate(id, name, description, employeesCount, createdAt, updatedAt); err != nil {
-		return nil, err
-	}
-
-	return &Company{
-		id:             id,
-		name:           name,
-		description:    description,
-		employeesCount: employeesCount,
-		registered:     registered,
-		companyType:    companyType,
-		createdAt:      createdAt,
-		updatedAt:      updatedAt,
-	}, nil
+// NewFromDB recreates a company from persisted state.
+func NewFromDB(state StoredState) *Company {
+	return fromStoredState(state)
 }
 
 // Update patches a company and returns the matching domain event.
@@ -162,21 +150,21 @@ func (c *Company) Update(input UpdateInput) (CompanyUpdatedEvent, error) {
 		companyType = *input.Type
 	}
 
-	updated, err := Restore(
-		c.id,
-		name,
-		description,
-		employeesCount,
-		registered,
-		companyType,
-		c.createdAt,
-		input.UpdatedAt,
-	)
-	if err != nil {
+	state := StoredState{
+		ID:             c.id,
+		Name:           name,
+		Description:    description,
+		EmployeesCount: employeesCount,
+		Registered:     registered,
+		Type:           companyType,
+		CreatedAt:      c.createdAt,
+		UpdatedAt:      utc(input.UpdatedAt),
+	}
+	if err := validateStoredState(state); err != nil {
 		return CompanyUpdatedEvent{}, err
 	}
 
-	*c = *updated
+	*c = *fromStoredState(state)
 
 	return CompanyUpdatedEvent{
 		CompanyID:  c.id,
@@ -236,37 +224,43 @@ func (c *Company) UpdatedAt() time.Time {
 	return c.updatedAt
 }
 
-func validate(
-	id uuid.UUID,
-	name string,
-	description *string,
-	employeesCount int,
-	createdAt time.Time,
-	updatedAt time.Time,
-) error {
+func fromStoredState(state StoredState) *Company {
+	return &Company{
+		id:             state.ID,
+		name:           state.Name,
+		description:    copyDescription(state.Description),
+		employeesCount: state.EmployeesCount,
+		registered:     state.Registered,
+		companyType:    state.Type,
+		createdAt:      utc(state.CreatedAt),
+		updatedAt:      utc(state.UpdatedAt),
+	}
+}
+
+func validateStoredState(state StoredState) error {
 	var violations []Violation
 
-	if id == uuid.Nil {
+	if state.ID == uuid.Nil {
 		violations = append(violations, Violation{Field: "id", Message: "is required"})
 	}
-	if strings.TrimSpace(name) == "" {
+	if strings.TrimSpace(state.Name) == "" {
 		violations = append(violations, Violation{Field: "name", Message: "is required"})
-	} else if utf8.RuneCountInString(name) > MaxNameLength {
+	} else if utf8.RuneCountInString(state.Name) > MaxNameLength {
 		violations = append(violations, Violation{Field: "name", Message: "must be at most 15 characters"})
 	}
-	if description != nil && utf8.RuneCountInString(*description) > MaxDescriptionLength {
+	if state.Description != nil && utf8.RuneCountInString(*state.Description) > MaxDescriptionLength {
 		violations = append(violations, Violation{Field: "description", Message: "must be at most 3000 characters"})
 	}
-	if employeesCount < 0 {
+	if state.EmployeesCount < 0 {
 		violations = append(violations, Violation{Field: "employees_count", Message: "must be greater than or equal to 0"})
 	}
-	if createdAt.IsZero() {
+	if state.CreatedAt.IsZero() {
 		violations = append(violations, Violation{Field: "created_at", Message: "is required"})
 	}
-	if updatedAt.IsZero() {
+	if state.UpdatedAt.IsZero() {
 		violations = append(violations, Violation{Field: "updated_at", Message: "is required"})
 	}
-	if !createdAt.IsZero() && !updatedAt.IsZero() && updatedAt.Before(createdAt) {
+	if !state.CreatedAt.IsZero() && !state.UpdatedAt.IsZero() && state.UpdatedAt.Before(state.CreatedAt) {
 		violations = append(violations, Violation{Field: "updated_at", Message: "must not be before created_at"})
 	}
 
