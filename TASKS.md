@@ -10,3 +10,4 @@
 [x] Define openapi spec, automate generation and generate http port (CreateCompany, UpdateCompany, DeleteCompany, GetCompany)
 [x] Define and implement the http port
 [x] Create the main entrypoint
+[x] Expose company type as a plain OpenAPI string

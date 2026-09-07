@@ -148,7 +148,7 @@ components:
         registered:
           type: boolean
         type:
-          $ref: '#/components/schemas/CompanyType'
+          type: string
         created_at:
           type: string
           format: date-time
@@ -181,7 +181,7 @@ components:
         registered:
           type: boolean
         type:
-          $ref: '#/components/schemas/CompanyType'
+          type: string
     UpdateCompanyRequest:
       type: object
       additionalProperties: false
@@ -201,14 +201,7 @@ components:
         registered:
           type: boolean
         type:
-          $ref: '#/components/schemas/CompanyType'
-    CompanyType:
-      type: string
-      enum:
-        - Corporations
-        - NonProfit
-        - Cooperative
-        - Sole Proprietorship
+          type: string
     Error:
       type: object
       additionalProperties: false

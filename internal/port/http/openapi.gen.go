@@ -22,14 +22,6 @@ const (
 	BearerAuthScopes = "bearerAuth.Scopes"
 )
 
-// Defines values for CompanyType.
-const (
-	Cooperative        CompanyType = "Cooperative"
-	Corporations       CompanyType = "Corporations"
-	NonProfit          CompanyType = "NonProfit"
-	SoleProprietorship CompanyType = "Sole Proprietorship"
-)
-
 // Company defines model for Company.
 type Company struct {
 	CreatedAt      *time.Time                `json:"created_at,omitempty"`
@@ -38,12 +30,9 @@ type Company struct {
 	Id             *openapi_types.UUID       `json:"id,omitempty"`
 	Name           string                    `json:"name"`
 	Registered     bool                      `json:"registered"`
-	Type           CompanyType               `json:"type"`
+	Type           string                    `json:"type"`
 	UpdatedAt      *time.Time                `json:"updated_at,omitempty"`
 }
-
-// CompanyType defines model for CompanyType.
-type CompanyType string
 
 // CreateCompanyRequest defines model for CreateCompanyRequest.
 type CreateCompanyRequest struct {
@@ -51,7 +40,7 @@ type CreateCompanyRequest struct {
 	EmployeesCount int32                     `json:"employees_count"`
 	Name           string                    `json:"name"`
 	Registered     bool                      `json:"registered"`
-	Type           CompanyType               `json:"type"`
+	Type           string                    `json:"type"`
 }
 
 // Error defines model for Error.
@@ -68,7 +57,7 @@ type UpdateCompanyRequest struct {
 	EmployeesCount *int32                    `json:"employees_count,omitempty"`
 	Name           *string                   `json:"name,omitempty"`
 	Registered     *bool                     `json:"registered,omitempty"`
-	Type           *CompanyType              `json:"type,omitempty"`
+	Type           *string                   `json:"type,omitempty"`
 }
 
 // Violation defines model for Violation.

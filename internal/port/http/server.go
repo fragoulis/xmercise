@@ -146,7 +146,7 @@ func companyResponse(company *domaincompany.Company) Company {
 		Description:    description,
 		EmployeesCount: int32(company.EmployeesCount()),
 		Registered:     company.Registered(),
-		Type:           CompanyType(company.Type()),
+		Type:           string(company.Type()),
 		CreatedAt:      &createdAt,
 		UpdatedAt:      &updatedAt,
 	}
