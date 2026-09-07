@@ -74,7 +74,9 @@ func TestStorePersistsCompanyAndOutboxInTransaction(t *testing.T) {
 	}
 
 	var outboxCount int
-	err = pool.QueryRow(ctx, `SELECT count(*) FROM outbox_events WHERE aggregate_id = $1`, created.ID()).Scan(&outboxCount)
+	err = pool.
+		QueryRow(ctx, `SELECT count(*) FROM outbox_events WHERE aggregate_id = $1`, created.ID()).
+		Scan(&outboxCount)
 	if err != nil {
 		t.Fatalf("count outbox: %v", err)
 	}

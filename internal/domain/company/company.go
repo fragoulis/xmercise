@@ -239,31 +239,57 @@ func validateStoredState(state StoredState) error {
 	var violations []Violation
 
 	if state.ID == uuid.Nil {
-		violations = append(violations, Violation{Field: "id", Message: "is required"})
+		violations = append(violations, Violation{
+			Field:   "id",
+			Message: "is required",
+		})
 	}
 	if strings.TrimSpace(state.Name) == "" {
-		violations = append(violations, Violation{Field: "name", Message: "is required"})
+		violations = append(violations, Violation{
+			Field:   "name",
+			Message: "is required",
+		})
 	} else if utf8.RuneCountInString(state.Name) > MaxNameLength {
-		violations = append(violations, Violation{Field: "name", Message: "must be at most 15 characters"})
+		violations = append(violations, Violation{
+			Field:   "name",
+			Message: "must be at most 15 characters",
+		})
 	}
 	if state.Description != nil && utf8.RuneCountInString(*state.Description) > MaxDescriptionLength {
-		violations = append(violations, Violation{Field: "description", Message: "must be at most 3000 characters"})
+		violations = append(violations, Violation{
+			Field:   "description",
+			Message: "must be at most 3000 characters",
+		})
 	}
 	if state.EmployeesCount < 0 {
-		violations = append(violations, Violation{Field: "employees_count", Message: "must be greater than or equal to 0"})
+		violations = append(violations, Violation{
+			Field:   "employees_count",
+			Message: "must be greater than or equal to 0",
+		})
 	}
 	if state.CreatedAt.IsZero() {
-		violations = append(violations, Violation{Field: "created_at", Message: "is required"})
+		violations = append(violations, Violation{
+			Field:   "created_at",
+			Message: "is required",
+		})
 	}
 	if state.UpdatedAt.IsZero() {
-		violations = append(violations, Violation{Field: "updated_at", Message: "is required"})
+		violations = append(violations, Violation{
+			Field:   "updated_at",
+			Message: "is required",
+		})
 	}
 	if !state.CreatedAt.IsZero() && !state.UpdatedAt.IsZero() && state.UpdatedAt.Before(state.CreatedAt) {
-		violations = append(violations, Violation{Field: "updated_at", Message: "must not be before created_at"})
+		violations = append(violations, Violation{
+			Field:   "updated_at",
+			Message: "must not be before created_at",
+		})
 	}
 
 	if len(violations) > 0 {
-		return ValidationError{Violations: violations}
+		return ValidationError{
+			Violations: violations,
+		}
 	}
 
 	return nil

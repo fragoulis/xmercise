@@ -83,7 +83,9 @@ func (s *Server) DeleteCompany(
 	ctx context.Context,
 	request DeleteCompanyRequestObject,
 ) (DeleteCompanyResponseObject, error) {
-	err := s.companies.Delete(ctx, appcompany.DeleteCommand{ID: request.Id})
+	err := s.companies.Delete(ctx, appcompany.DeleteCommand{
+		ID: request.Id,
+	})
 	if errors.Is(err, appcompany.ErrCompanyNotFound) {
 		return DeleteCompany404JSONResponse{
 			NotFoundJSONResponse: NotFoundJSONResponse(errorResponse(404, "Company not found", "")),
@@ -101,7 +103,9 @@ func (s *Server) GetCompany(
 	ctx context.Context,
 	request GetCompanyRequestObject,
 ) (GetCompanyResponseObject, error) {
-	found, err := s.companies.FindOne(ctx, appcompany.FindOneQuery{ID: request.Id})
+	found, err := s.companies.FindOne(ctx, appcompany.FindOneQuery{
+		ID: request.Id,
+	})
 	if errors.Is(err, appcompany.ErrCompanyNotFound) {
 		return GetCompany404JSONResponse{
 			NotFoundJSONResponse: NotFoundJSONResponse(errorResponse(404, "Company not found", "")),
@@ -152,7 +156,9 @@ func companyResponse(company *domaincompany.Company) Company {
 
 func createErrorResponse(err error) (CreateCompanyResponseObject, error) {
 	if validation, ok := validationError(err); ok {
-		return CreateCompany400JSONResponse{BadRequestJSONResponse: BadRequestJSONResponse(validation)}, nil
+		return CreateCompany400JSONResponse{
+			BadRequestJSONResponse: BadRequestJSONResponse(validation),
+		}, nil
 	}
 	if errors.Is(err, appcompany.ErrCompanyNameTaken) {
 		return CreateCompany409JSONResponse{
@@ -165,7 +171,9 @@ func createErrorResponse(err error) (CreateCompanyResponseObject, error) {
 
 func updateErrorResponse(err error) (UpdateCompanyResponseObject, error) {
 	if validation, ok := validationError(err); ok {
-		return UpdateCompany400JSONResponse{BadRequestJSONResponse: BadRequestJSONResponse(validation)}, nil
+		return UpdateCompany400JSONResponse{
+			BadRequestJSONResponse: BadRequestJSONResponse(validation),
+		}, nil
 	}
 	if errors.Is(err, appcompany.ErrCompanyNotFound) {
 		return UpdateCompany404JSONResponse{

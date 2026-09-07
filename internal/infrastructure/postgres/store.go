@@ -57,7 +57,9 @@ func (s *Store) WithinTx(ctx context.Context, fn func(ctx context.Context, tx ap
 		_ = dbTx.Rollback(ctx)
 	}()
 
-	if err := fn(ctx, &Tx{tx: dbTx}); err != nil {
+	if err := fn(ctx, &Tx{
+		tx: dbTx,
+	}); err != nil {
 		return err
 	}
 
@@ -115,7 +117,15 @@ func (t *Tx) InsertOutboxEvent(ctx context.Context, event outbox.Event) error {
 		INSERT INTO outbox_events (
 			id, event_type, aggregate_type, aggregate_id, occurred_at, payload, created_at, attempts
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, 0)
-	`, event.ID, event.EventType, event.AggregateType, event.AggregateID, event.OccurredAt, event.Payload, event.CreatedAt)
+	`,
+		event.ID,
+		event.EventType,
+		event.AggregateType,
+		event.AggregateID,
+		event.OccurredAt,
+		event.Payload,
+		event.CreatedAt,
+	)
 	return err
 }
 
@@ -124,7 +134,16 @@ func insertCompany(ctx context.Context, db executor, c *company.Company) error {
 		INSERT INTO companies (
 			id, name, description, employees_count, registered, type, created_at, updated_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-	`, c.ID(), c.Name(), companyDescription(c), c.EmployeesCount(), c.Registered(), c.Type(), c.CreatedAt(), c.UpdatedAt())
+	`,
+		c.ID(),
+		c.Name(),
+		companyDescription(c),
+		c.EmployeesCount(),
+		c.Registered(),
+		c.Type(),
+		c.CreatedAt(),
+		c.UpdatedAt(),
+	)
 	return mapCompanyWriteError(err)
 }
 
@@ -148,7 +167,16 @@ func updateCompany(ctx context.Context, db executor, c *company.Company) error {
 			created_at = $7,
 			updated_at = $8
 		WHERE id = $1
-	`, c.ID(), c.Name(), companyDescription(c), c.EmployeesCount(), c.Registered(), c.Type(), c.CreatedAt(), c.UpdatedAt())
+	`,
+		c.ID(),
+		c.Name(),
+		companyDescription(c),
+		c.EmployeesCount(),
+		c.Registered(),
+		c.Type(),
+		c.CreatedAt(),
+		c.UpdatedAt(),
+	)
 	if err != nil {
 		return mapCompanyWriteError(err)
 	}

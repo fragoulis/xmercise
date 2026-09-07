@@ -15,7 +15,9 @@ func TestJWTMiddleware(t *testing.T) {
 	t.Parallel()
 
 	const secret = "test-secret"
-	middleware := httpadapter.NewJWTMiddleware(httpadapter.JWTConfig{Secret: secret})
+	middleware := httpadapter.NewJWTMiddleware(httpadapter.JWTConfig{
+		Secret: secret,
+	})
 	handler := middleware.Handler(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}))

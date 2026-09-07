@@ -90,7 +90,9 @@ func TestServiceDeleteRemovesCompanyWithOutboxEvent(t *testing.T) {
 	store.companies[created.ID()] = created
 	service := appcompany.NewService(store)
 
-	err := service.Delete(ctx, appcompany.DeleteCommand{ID: created.ID()})
+	err := service.Delete(ctx, appcompany.DeleteCommand{
+		ID: created.ID(),
+	})
 	if err != nil {
 		t.Fatalf("delete company: %v", err)
 	}
@@ -116,7 +118,9 @@ func TestServiceFindOneReturnsCompany(t *testing.T) {
 	store.companies[created.ID()] = created
 	service := appcompany.NewService(store)
 
-	loaded, err := service.FindOne(ctx, appcompany.FindOneQuery{ID: created.ID()})
+	loaded, err := service.FindOne(ctx, appcompany.FindOneQuery{
+		ID: created.ID(),
+	})
 	if err != nil {
 		t.Fatalf("find one: %v", err)
 	}

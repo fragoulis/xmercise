@@ -11,3 +11,4 @@
 [x] Define and implement the http port
 [x] Create the main entrypoint
 [x] Expose company type as a plain string through the HTTP and application layers
+[x] Standardize Go formatting

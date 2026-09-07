@@ -206,7 +206,14 @@ func (s *Service) FindOne(ctx context.Context, query FindOneQuery) (*companydoma
 
 func validateID(id uuid.UUID) error {
 	if id == uuid.Nil {
-		return companydomain.ValidationError{Violations: []companydomain.Violation{{Field: "id", Message: "is required"}}}
+		return companydomain.ValidationError{
+			Violations: []companydomain.Violation{
+				{
+					Field:   "id",
+					Message: "is required",
+				},
+			},
+		}
 	}
 
 	return nil
@@ -217,7 +224,14 @@ func validateType(companyType companydomain.Type, field string) error {
 		return nil
 	}
 
-	return companydomain.ValidationError{Violations: []companydomain.Violation{{Field: field, Message: "is invalid"}}}
+	return companydomain.ValidationError{
+		Violations: []companydomain.Violation{
+			{
+				Field:   field,
+				Message: "is invalid",
+			},
+		},
+	}
 }
 
 func mapStoreError(err error) error {

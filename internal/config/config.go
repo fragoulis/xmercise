@@ -43,9 +43,18 @@ func Load(path string) (Config, error) {
 		name  string
 		value string
 	}{
-		{name: "COMPANIES_HTTP_ADDR", value: cfg.HTTPAddr},
-		{name: "COMPANIES_DATABASE_URL", value: cfg.DatabaseURL},
-		{name: "COMPANIES_JWT_SECRET", value: cfg.JWTSecret},
+		{
+			name:  "COMPANIES_HTTP_ADDR",
+			value: cfg.HTTPAddr,
+		},
+		{
+			name:  "COMPANIES_DATABASE_URL",
+			value: cfg.DatabaseURL,
+		},
+		{
+			name:  "COMPANIES_JWT_SECRET",
+			value: cfg.JWTSecret,
+		},
 	}
 	missing := make([]string, 0, len(required))
 	for _, setting := range required {

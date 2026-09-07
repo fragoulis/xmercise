@@ -140,8 +140,11 @@ func TestUpdatePatchesCompany(t *testing.T) {
 	companyType := company.TypeCooperative
 
 	event, err := c.Update(company.UpdateInput{
-		Name:           &name,
-		Description:    company.DescriptionPatch{Present: true, Value: nil},
+		Name: &name,
+		Description: company.DescriptionPatch{
+			Present: true,
+			Value:   nil,
+		},
 		EmployeesCount: &employeesCount,
 		Registered:     &registered,
 		Type:           &companyType,
