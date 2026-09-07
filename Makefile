@@ -3,6 +3,10 @@ SHELL := /bin/sh
 
 include .env
 
+.PHONY: generate
+generate: ## Generate HTTP port from the OpenAPI contract.
+	go generate ./api
+
 .PHONY: deps
 deps: ## Start local dependencies.
 	docker compose up

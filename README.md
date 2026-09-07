@@ -30,6 +30,14 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
+## Generate the HTTP port
+
+The OpenAPI contract is `api/openapi.yaml`. Regenerate the strict Chi HTTP port after changing it:
+
+```sh
+make generate
+```
+
 ## Start the database
 
 Start PostgreSQL with Docker Compose:

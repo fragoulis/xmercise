@@ -66,7 +66,9 @@
   - Do not include RFC 7807 `type`.
 - API contract: OpenAPI defines routes, requests, and responses.
   - OpenAPI spec is source of truth for the HTTP contract.
-  - Implementation is hand-written. No server code generation initially.
+  - The spec lives at `api/openapi.yaml`.
+  - `oapi-codegen` v2.4.1 generates the Chi HTTP adapter and strict server port at `internal/port/http/openapi.gen.go`.
+  - Generation is run with `make generate`.
   - JSON request decoding is strict. Unknown fields are rejected.
 - Docker: Dockerfile plus Docker Compose for local dependencies.
   - Dockerfile must be multi-stage.

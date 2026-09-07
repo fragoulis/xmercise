@@ -178,7 +178,7 @@ func (s *Service) Delete(ctx context.Context, command DeleteCommand) error {
 			return mapStoreError(err)
 		}
 
-		outboxEvent, err := buildOutboxEvent(event, deleteData{ID: command.ID})
+		outboxEvent, err := buildOutboxEvent(event, deleteData(command))
 		if err != nil {
 			return err
 		}

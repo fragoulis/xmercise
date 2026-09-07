@@ -7,5 +7,5 @@
 [x] Define and implement domain models (company)
 [x] Define and implement the db adapter
 [x] Define and implement domain services (create, update, delete, findOne)
-[ ] Define openapi spec, automate generation and generate http port (CreateCompany, UpdateCompany, DeleteCompany, GetCompany)
-[ ] Define and implement the http port
+[x] Define openapi spec, automate generation and generate http port (CreateCompany, UpdateCompany, DeleteCompany, GetCompany)
+[x] Define and implement the http port
