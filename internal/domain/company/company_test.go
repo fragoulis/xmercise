@@ -27,15 +27,14 @@ func TestNewCreatesCompanyAndEvent(t *testing.T) {
 		t.Fatalf("new company: %v", err)
 	}
 
-	state := company.State()
-	if state.ID != id {
-		t.Fatalf("id = %s, want %s", state.ID, id)
+	if company.ID() != id {
+		t.Fatalf("id = %s, want %s", company.ID(), id)
 	}
-	if state.CreatedAt.Location() != time.UTC {
-		t.Fatalf("created location = %v, want UTC", state.CreatedAt.Location())
+	if company.CreatedAt().Location() != time.UTC {
+		t.Fatalf("created location = %v, want UTC", company.CreatedAt().Location())
 	}
-	if state.UpdatedAt != state.CreatedAt {
-		t.Fatalf("updated_at = %s, want created_at %s", state.UpdatedAt, state.CreatedAt)
+	if company.UpdatedAt() != company.CreatedAt() {
+		t.Fatalf("updated_at = %s, want created_at %s", company.UpdatedAt(), company.CreatedAt())
 	}
 	if event.Type() != EventTypeCompanyCreated {
 		t.Fatalf("event type = %s, want %s", event.Type(), EventTypeCompanyCreated)
@@ -45,10 +44,29 @@ func TestNewCreatesCompanyAndEvent(t *testing.T) {
 	}
 }
 
+func TestNewGeneratesID(t *testing.T) {
+	company, event, err := New(CreateInput{
+		Name:           "Acme",
+		EmployeesCount: 7,
+		Registered:     true,
+		Type:           TypeCorporations,
+		CreatedAt:      time.Now(),
+	})
+	if err != nil {
+		t.Fatalf("new company: %v", err)
+	}
+
+	if company.ID() == uuid.Nil {
+		t.Fatal("id was not generated")
+	}
+	if event.AggregateID() != company.ID() {
+		t.Fatalf("event aggregate id = %s, want %s", event.AggregateID(), company.ID())
+	}
+}
+
 func TestNewRejectsInvalidCompany(t *testing.T) {
 	description := strings.Repeat("a", MaxDescriptionLength+1)
 	_, _, err := New(CreateInput{
-		ID:             uuid.Nil,
 		Name:           strings.Repeat("a", MaxNameLength+1),
 		Description:    &description,
 		EmployeesCount: -1,
@@ -65,11 +83,14 @@ func TestNewRejectsInvalidCompany(t *testing.T) {
 		t.Fatalf("error = %T, want ValidationError", err)
 	}
 
-	wantFields := []string{"id", "name", "description", "employees_count", "type", "created_at", "updated_at"}
+	wantFields := []string{"name", "description", "employees_count", "created_at", "updated_at"}
 	for _, field := range wantFields {
 		if !hasViolation(validationErr, field) {
 			t.Fatalf("missing violation for %q in %#v", field, validationErr.Violations)
 		}
+	}
+	if hasViolation(validationErr, "type") {
+		t.Fatalf("type validation belongs to the service: %#v", validationErr.Violations)
 	}
 }
 
@@ -105,21 +126,20 @@ func TestUpdatePatchesCompany(t *testing.T) {
 		t.Fatalf("update company: %v", err)
 	}
 
-	state := company.State()
-	if state.Name != name {
-		t.Fatalf("name = %q, want %q", state.Name, name)
+	if company.Name() != name {
+		t.Fatalf("name = %q, want %q", company.Name(), name)
 	}
-	if state.Description != nil {
-		t.Fatalf("description = %q, want nil", *state.Description)
+	if _, ok := company.Description(); ok {
+		t.Fatal("description is present, want cleared")
 	}
-	if state.EmployeesCount != employeesCount {
-		t.Fatalf("employees count = %d, want %d", state.EmployeesCount, employeesCount)
+	if company.EmployeesCount() != employeesCount {
+		t.Fatalf("employees count = %d, want %d", company.EmployeesCount(), employeesCount)
 	}
-	if state.Registered != registered {
-		t.Fatalf("registered = %t, want %t", state.Registered, registered)
+	if company.Registered() != registered {
+		t.Fatalf("registered = %t, want %t", company.Registered(), registered)
 	}
-	if state.Type != companyType {
-		t.Fatalf("type = %s, want %s", state.Type, companyType)
+	if company.Type() != companyType {
+		t.Fatalf("type = %s, want %s", company.Type(), companyType)
 	}
 	if event.Type() != EventTypeCompanyUpdated {
 		t.Fatalf("event type = %s, want %s", event.Type(), EventTypeCompanyUpdated)
@@ -139,16 +159,13 @@ func TestDeletedReturnsEvent(t *testing.T) {
 		t.Fatalf("new company: %v", err)
 	}
 
-	event, err := company.Deleted(time.Now())
-	if err != nil {
-		t.Fatalf("deleted event: %v", err)
-	}
+	event := company.Deleted(time.Now())
 
 	if event.Type() != EventTypeCompanyDeleted {
 		t.Fatalf("event type = %s, want %s", event.Type(), EventTypeCompanyDeleted)
 	}
-	if event.AggregateID() != company.State().ID {
-		t.Fatalf("event aggregate id = %s, want %s", event.AggregateID(), company.State().ID)
+	if event.AggregateID() != company.ID() {
+		t.Fatalf("event aggregate id = %s, want %s", event.AggregateID(), company.ID())
 	}
 }
 

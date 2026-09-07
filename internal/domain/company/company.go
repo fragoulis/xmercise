@@ -2,12 +2,12 @@
 package company
 
 import (
-	"fmt"
 	"strings"
 	"time"
 	"unicode/utf8"
 
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 )
 
 // MaxNameLength is the maximum company name length in Unicode code points.
@@ -38,28 +38,6 @@ func (t Type) Valid() bool {
 	default:
 		return false
 	}
-}
-
-// ParseType converts an API or database string into a company type.
-func ParseType(value string) (Type, error) {
-	t := Type(value)
-	if !t.Valid() {
-		return "", fmt.Errorf("invalid company type %q", value)
-	}
-
-	return t, nil
-}
-
-// State is the serializable company state used by adapters.
-type State struct {
-	ID             uuid.UUID
-	Name           string
-	Description    *string
-	EmployeesCount int
-	Registered     bool
-	Type           Type
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
 }
 
 // CreateInput contains data required to create a company.
@@ -103,72 +81,97 @@ type Company struct {
 
 // New creates a company and returns the matching domain event.
 func New(input CreateInput) (*Company, CompanyCreatedEvent, error) {
-	state := State{
-		ID:             input.ID,
-		Name:           input.Name,
-		Description:    cloneStringPtr(input.Description),
-		EmployeesCount: input.EmployeesCount,
-		Registered:     input.Registered,
-		Type:           input.Type,
-		CreatedAt:      utc(input.CreatedAt),
-		UpdatedAt:      utc(input.CreatedAt),
+	id := input.ID
+	if id == uuid.Nil {
+		id = uuid.New()
 	}
 
-	c, err := FromState(state)
+	createdAt := utc(input.CreatedAt)
+	c, err := Restore(
+		id,
+		input.Name,
+		copyDescription(input.Description),
+		input.EmployeesCount,
+		input.Registered,
+		input.Type,
+		createdAt,
+		createdAt,
+	)
 	if err != nil {
 		return nil, CompanyCreatedEvent{}, err
 	}
 
 	return c, CompanyCreatedEvent{
-		Company:    c.State(),
+		CompanyID:  c.id,
 		OccurredAt: c.createdAt,
 	}, nil
 }
 
-// FromState restores a company from trusted storage while rechecking invariants.
-func FromState(state State) (*Company, error) {
-	state.Description = cloneStringPtr(state.Description)
-	state.CreatedAt = utc(state.CreatedAt)
-	state.UpdatedAt = utc(state.UpdatedAt)
+// Restore recreates a company from persistence.
+func Restore(
+	id uuid.UUID,
+	name string,
+	description *string,
+	employeesCount int,
+	registered bool,
+	companyType Type,
+	createdAt time.Time,
+	updatedAt time.Time,
+) (*Company, error) {
+	description = copyDescription(description)
+	createdAt = utc(createdAt)
+	updatedAt = utc(updatedAt)
 
-	if err := validateState(state); err != nil {
+	if err := validate(id, name, description, employeesCount, createdAt, updatedAt); err != nil {
 		return nil, err
 	}
 
 	return &Company{
-		id:             state.ID,
-		name:           state.Name,
-		description:    state.Description,
-		employeesCount: state.EmployeesCount,
-		registered:     state.Registered,
-		companyType:    state.Type,
-		createdAt:      state.CreatedAt,
-		updatedAt:      state.UpdatedAt,
+		id:             id,
+		name:           name,
+		description:    description,
+		employeesCount: employeesCount,
+		registered:     registered,
+		companyType:    companyType,
+		createdAt:      createdAt,
+		updatedAt:      updatedAt,
 	}, nil
 }
 
 // Update patches a company and returns the matching domain event.
 func (c *Company) Update(input UpdateInput) (CompanyUpdatedEvent, error) {
-	state := c.State()
+	name := c.name
+	description := copyDescription(c.description)
+	employeesCount := c.employeesCount
+	registered := c.registered
+	companyType := c.companyType
 
 	if input.Name != nil {
-		state.Name = *input.Name
+		name = *input.Name
 	}
 	if input.Description.Present {
-		state.Description = cloneStringPtr(input.Description.Value)
+		description = copyDescription(input.Description.Value)
 	}
 	if input.EmployeesCount != nil {
-		state.EmployeesCount = *input.EmployeesCount
+		employeesCount = *input.EmployeesCount
 	}
 	if input.Registered != nil {
-		state.Registered = *input.Registered
+		registered = *input.Registered
 	}
 	if input.Type != nil {
-		state.Type = *input.Type
+		companyType = *input.Type
 	}
-	state.UpdatedAt = utc(input.UpdatedAt)
 
-	updated, err := FromState(state)
+	updated, err := Restore(
+		c.id,
+		name,
+		description,
+		employeesCount,
+		registered,
+		companyType,
+		c.createdAt,
+		input.UpdatedAt,
+	)
 	if err != nil {
 		return CompanyUpdatedEvent{}, err
 	}
@@ -176,69 +179,94 @@ func (c *Company) Update(input UpdateInput) (CompanyUpdatedEvent, error) {
 	*c = *updated
 
 	return CompanyUpdatedEvent{
-		Company:    c.State(),
+		CompanyID:  c.id,
 		OccurredAt: c.updatedAt,
 	}, nil
 }
 
 // Deleted returns the domain event for a hard delete.
-func (c *Company) Deleted(at time.Time) (CompanyDeletedEvent, error) {
-	occurredAt := utc(at)
-	if occurredAt.IsZero() {
-		return CompanyDeletedEvent{}, ValidationError{
-			Violations: []Violation{
-				{Field: "occurred_at", Message: "is required"},
-			},
-		}
-	}
-
+func (c *Company) Deleted(at time.Time) CompanyDeletedEvent {
 	return CompanyDeletedEvent{
 		CompanyID:  c.id,
-		OccurredAt: occurredAt,
-	}, nil
-}
-
-// State returns a copy of the company state.
-func (c *Company) State() State {
-	return State{
-		ID:             c.id,
-		Name:           c.name,
-		Description:    cloneStringPtr(c.description),
-		EmployeesCount: c.employeesCount,
-		Registered:     c.registered,
-		Type:           c.companyType,
-		CreatedAt:      c.createdAt,
-		UpdatedAt:      c.updatedAt,
+		OccurredAt: utc(at),
 	}
 }
 
-func validateState(state State) error {
+// ID returns the company ID.
+func (c *Company) ID() uuid.UUID {
+	return c.id
+}
+
+// Name returns the company name.
+func (c *Company) Name() string {
+	return c.name
+}
+
+// Description returns the optional description.
+func (c *Company) Description() (string, bool) {
+	if c.description == nil {
+		return "", false
+	}
+
+	return *c.description, true
+}
+
+// EmployeesCount returns the number of employees.
+func (c *Company) EmployeesCount() int {
+	return c.employeesCount
+}
+
+// Registered returns whether the company is registered.
+func (c *Company) Registered() bool {
+	return c.registered
+}
+
+// Type returns the company type.
+func (c *Company) Type() Type {
+	return c.companyType
+}
+
+// CreatedAt returns the creation time.
+func (c *Company) CreatedAt() time.Time {
+	return c.createdAt
+}
+
+// UpdatedAt returns the latest update time.
+func (c *Company) UpdatedAt() time.Time {
+	return c.updatedAt
+}
+
+func validate(
+	id uuid.UUID,
+	name string,
+	description *string,
+	employeesCount int,
+	createdAt time.Time,
+	updatedAt time.Time,
+) error {
 	var violations []Violation
 
-	if state.ID == uuid.Nil {
+	if id == uuid.Nil {
 		violations = append(violations, Violation{Field: "id", Message: "is required"})
 	}
-	if strings.TrimSpace(state.Name) == "" {
+	if strings.TrimSpace(name) == "" {
 		violations = append(violations, Violation{Field: "name", Message: "is required"})
-	} else if utf8.RuneCountInString(state.Name) > MaxNameLength {
+	} else if utf8.RuneCountInString(name) > MaxNameLength {
 		violations = append(violations, Violation{Field: "name", Message: "must be at most 15 characters"})
 	}
-	if state.Description != nil && utf8.RuneCountInString(*state.Description) > MaxDescriptionLength {
+	if description != nil && utf8.RuneCountInString(*description) > MaxDescriptionLength {
 		violations = append(violations, Violation{Field: "description", Message: "must be at most 3000 characters"})
 	}
-	if state.EmployeesCount < 0 {
+	if employeesCount < 0 {
 		violations = append(violations, Violation{Field: "employees_count", Message: "must be greater than or equal to 0"})
 	}
-	if !state.Type.Valid() {
-		violations = append(violations, Violation{Field: "type", Message: "is invalid"})
-	}
-	if state.CreatedAt.IsZero() {
+	if createdAt.IsZero() {
 		violations = append(violations, Violation{Field: "created_at", Message: "is required"})
 	}
-	if state.UpdatedAt.IsZero() {
+	if updatedAt.IsZero() {
 		violations = append(violations, Violation{Field: "updated_at", Message: "is required"})
 	}
-	if !state.CreatedAt.IsZero() && !state.UpdatedAt.IsZero() && state.UpdatedAt.Before(state.CreatedAt) {
+	if !createdAt.IsZero() && !updatedAt.IsZero() && updatedAt.Before(createdAt) {
 		violations = append(violations, Violation{Field: "updated_at", Message: "must not be before created_at"})
 	}
 
@@ -249,13 +277,12 @@ func validateState(state State) error {
 	return nil
 }
 
-func cloneStringPtr(value *string) *string {
-	if value == nil {
+func copyDescription(description *string) *string {
+	if description == nil {
 		return nil
 	}
 
-	copy := *value
-	return &copy
+	return lo.ToPtr(*description)
 }
 
 func utc(value time.Time) time.Time {

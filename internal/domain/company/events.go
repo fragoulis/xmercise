@@ -30,7 +30,7 @@ type Event interface {
 
 // CompanyCreatedEvent describes a created company.
 type CompanyCreatedEvent struct {
-	Company    State
+	CompanyID  uuid.UUID
 	OccurredAt time.Time
 }
 
@@ -46,7 +46,7 @@ func (e CompanyCreatedEvent) AggregateType() string {
 
 // AggregateID returns the aggregate ID.
 func (e CompanyCreatedEvent) AggregateID() uuid.UUID {
-	return e.Company.ID
+	return e.CompanyID
 }
 
 // Occurred returns when the event happened.
@@ -56,7 +56,7 @@ func (e CompanyCreatedEvent) Occurred() time.Time {
 
 // CompanyUpdatedEvent describes an updated company.
 type CompanyUpdatedEvent struct {
-	Company    State
+	CompanyID  uuid.UUID
 	OccurredAt time.Time
 }
 
@@ -72,7 +72,7 @@ func (e CompanyUpdatedEvent) AggregateType() string {
 
 // AggregateID returns the aggregate ID.
 func (e CompanyUpdatedEvent) AggregateID() uuid.UUID {
-	return e.Company.ID
+	return e.CompanyID
 }
 
 // Occurred returns when the event happened.
