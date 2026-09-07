@@ -25,7 +25,7 @@ func TestServiceCreatePersistsCompanyAndOutboxEvent(t *testing.T) {
 		Description:    &description,
 		EmployeesCount: 7,
 		Registered:     true,
-		Type:           companydomain.TypeCorporations,
+		Type:           "Corporations",
 	})
 	if err != nil {
 		t.Fatalf("create company: %v", err)
@@ -63,7 +63,7 @@ func TestServiceUpdatePatchesCompanyWithOutboxEvent(t *testing.T) {
 	updated, err := service.Update(ctx, appcompany.UpdateCommand{
 		ID:   initial.ID(),
 		Name: &name,
-		Type: lo.ToPtr(companydomain.TypeCooperative),
+		Type: lo.ToPtr("Cooperative"),
 	})
 	if err != nil {
 		t.Fatalf("update company: %v", err)
@@ -132,7 +132,7 @@ func TestServiceValidatesIDAndType(t *testing.T) {
 	_, err := service.Create(ctx, appcompany.CreateCommand{
 		Name:           "Acme",
 		EmployeesCount: 7,
-		Type:           companydomain.Type("LLC"),
+		Type:           "LLC",
 	})
 	assertViolation(t, err, "type")
 

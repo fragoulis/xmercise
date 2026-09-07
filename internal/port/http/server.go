@@ -37,7 +37,7 @@ func (s *Server) CreateCompany(
 		Description:    nullableValue(request.Body.Description),
 		EmployeesCount: int(request.Body.EmployeesCount),
 		Registered:     request.Body.Registered,
-		Type:           domaincompany.Type(request.Body.Type),
+		Type:           request.Body.Type,
 	})
 	if err != nil {
 		return createErrorResponse(err)
@@ -64,12 +64,10 @@ func (s *Server) UpdateCompany(
 		Name:        body.Name,
 		Description: descriptionPatch(body.Description),
 		Registered:  body.Registered,
+		Type:        body.Type,
 	}
 	if body.EmployeesCount != nil {
 		command.EmployeesCount = lo.ToPtr(int(*body.EmployeesCount))
-	}
-	if body.Type != nil {
-		command.Type = lo.ToPtr(domaincompany.Type(*body.Type))
 	}
 
 	updated, err := s.companies.Update(ctx, command)

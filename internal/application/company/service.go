@@ -42,7 +42,7 @@ type CreateCommand struct {
 	Description    *string
 	EmployeesCount int
 	Registered     bool
-	Type           companydomain.Type
+	Type           string
 }
 
 // UpdateCommand contains patch data for a company.
@@ -52,7 +52,7 @@ type UpdateCommand struct {
 	Description    companydomain.DescriptionPatch
 	EmployeesCount *int
 	Registered     *bool
-	Type           *companydomain.Type
+	Type           *string
 }
 
 // DeleteCommand identifies a company to delete.
@@ -79,7 +79,8 @@ func NewService(store Store) *Service {
 
 // Create creates a company and stores its outbox event in the same transaction.
 func (s *Service) Create(ctx context.Context, command CreateCommand) (*companydomain.Company, error) {
-	if err := validateType(command.Type, "type"); err != nil {
+	companyType := companydomain.Type(command.Type)
+	if err := validateType(companyType, "type"); err != nil {
 		return nil, err
 	}
 
@@ -88,7 +89,7 @@ func (s *Service) Create(ctx context.Context, command CreateCommand) (*companydo
 		Description:    command.Description,
 		EmployeesCount: command.EmployeesCount,
 		Registered:     command.Registered,
-		Type:           command.Type,
+		Type:           companyType,
 	})
 	if err != nil {
 		return nil, err
@@ -117,8 +118,10 @@ func (s *Service) Update(ctx context.Context, command UpdateCommand) (*companydo
 	if err := validateID(command.ID); err != nil {
 		return nil, err
 	}
+	var companyType *companydomain.Type
 	if command.Type != nil {
-		if err := validateType(*command.Type, "type"); err != nil {
+		companyType = lo.ToPtr(companydomain.Type(*command.Type))
+		if err := validateType(*companyType, "type"); err != nil {
 			return nil, err
 		}
 	}
@@ -135,7 +138,7 @@ func (s *Service) Update(ctx context.Context, command UpdateCommand) (*companydo
 			Description:    command.Description,
 			EmployeesCount: command.EmployeesCount,
 			Registered:     command.Registered,
-			Type:           command.Type,
+			Type:           companyType,
 		})
 		if err != nil {
 			return err
