@@ -30,6 +30,8 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
+Set `COMPANIES_LOG_LEVEL` to `DEBUG`, `INFO`, `WARN`, or `ERROR`. It defaults to `INFO`.
+
 ## Generate the HTTP port
 
 The OpenAPI contract is `api/openapi.yaml`. Regenerate the strict Chi HTTP port after changing it:

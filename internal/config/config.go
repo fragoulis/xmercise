@@ -3,6 +3,7 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -15,6 +16,7 @@ type Config struct {
 	JWTSecret   string
 	JWTIssuer   string
 	JWTAudience string
+	LogLevel    slog.Level
 }
 
 // Load reads configuration from an optional file and COMPANIES_ environment variables.
@@ -23,6 +25,7 @@ func Load(path string) (Config, error) {
 	loader.SetEnvPrefix("COMPANIES")
 	loader.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	loader.AutomaticEnv()
+	loader.SetDefault("log_level", slog.LevelInfo.String())
 
 	if path != "" {
 		loader.SetConfigFile(path)
@@ -31,12 +34,18 @@ func Load(path string) (Config, error) {
 		}
 	}
 
+	var logLevel slog.Level
+	if err := logLevel.UnmarshalText([]byte(loader.GetString("log_level"))); err != nil {
+		return Config{}, fmt.Errorf("parse log level: %w", err)
+	}
+
 	cfg := Config{
 		HTTPAddr:    loader.GetString("http_addr"),
 		DatabaseURL: loader.GetString("database_url"),
 		JWTSecret:   loader.GetString("jwt_secret"),
 		JWTIssuer:   loader.GetString("jwt_issuer"),
 		JWTAudience: loader.GetString("jwt_audience"),
+		LogLevel:    logLevel,
 	}
 
 	required := []struct {

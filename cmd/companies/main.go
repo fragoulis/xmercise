@@ -51,6 +51,9 @@ func newCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+				Level: cfg.LogLevel,
+			})))
 
 			return run(command.Context(), cfg)
 		},
