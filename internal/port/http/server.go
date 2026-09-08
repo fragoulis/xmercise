@@ -190,12 +190,12 @@ func updateErrorResponse(err error) (UpdateCompanyResponseObject, error) {
 }
 
 func validationError(err error) (Error, bool) {
-	var validation domaincompany.ValidationError
+	var validation appcompany.ValidationError
 	if !errors.As(err, &validation) {
 		return Error{}, false
 	}
 
-	violations := lo.Map(validation.Violations, func(violation domaincompany.Violation, _ int) Violation {
+	violations := lo.Map(validation.Violations, func(violation appcompany.Violation, _ int) Violation {
 		return Violation{
 			Field:   violation.Field,
 			Message: violation.Message,

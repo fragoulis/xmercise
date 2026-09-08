@@ -2,13 +2,13 @@ package company
 
 import "strings"
 
-// Violation describes one invalid field.
+// Violation describes one invalid command field.
 type Violation struct {
 	Field   string
 	Message string
 }
 
-// ValidationError contains domain invariant violations.
+// ValidationError contains invalid command fields.
 type ValidationError struct {
 	Violations []Violation
 }

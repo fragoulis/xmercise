@@ -30,7 +30,7 @@ func TestStorePersistsCompanyAndOutboxInTransaction(t *testing.T) {
 	store := postgres.NewStore(pool)
 
 	description := "shipping"
-	created, event, err := company.New(company.CreateInput{
+	created, event := company.New(company.CreateInput{
 		ID:             uuid.New(),
 		Name:           "Acme",
 		Description:    &description,
@@ -38,11 +38,8 @@ func TestStorePersistsCompanyAndOutboxInTransaction(t *testing.T) {
 		Registered:     true,
 		Type:           company.TypeCorporations,
 	})
-	if err != nil {
-		t.Fatalf("new company: %v", err)
-	}
 
-	err = store.WithinTx(ctx, func(ctx context.Context, tx appcompany.Tx) error {
+	err := store.WithinTx(ctx, func(ctx context.Context, tx appcompany.Tx) error {
 		if err := tx.InsertCompany(ctx, created); err != nil {
 			return err
 		}
@@ -90,46 +87,38 @@ func TestStoreUpdatesDeletesAndMapsErrors(t *testing.T) {
 	pool := newPostgresPool(t, ctx)
 	store := postgres.NewStore(pool)
 
-	created, _, err := company.New(company.CreateInput{
+	created, _ := company.New(company.CreateInput{
 		ID:             uuid.New(),
 		Name:           "Acme",
 		EmployeesCount: 7,
 		Registered:     true,
 		Type:           company.TypeCorporations,
 	})
-	if err != nil {
-		t.Fatalf("new company: %v", err)
-	}
 	if err := store.InsertCompany(ctx, created); err != nil {
 		t.Fatalf("insert company: %v", err)
 	}
 
-	duplicate, _, err := company.New(company.CreateInput{
+	duplicate, _ := company.New(company.CreateInput{
 		ID:             uuid.New(),
 		Name:           "acme",
 		EmployeesCount: 1,
 		Registered:     false,
 		Type:           company.TypeCooperative,
 	})
-	if err != nil {
-		t.Fatalf("new duplicate company: %v", err)
-	}
 	if err := store.InsertCompany(ctx, duplicate); !errors.Is(err, postgres.ErrCompanyNameTaken) {
 		t.Fatalf("duplicate error = %v, want %v", err, postgres.ErrCompanyNameTaken)
 	}
 
 	newName := "Beta"
-	err = store.WithinTx(ctx, func(ctx context.Context, tx appcompany.Tx) error {
+	err := store.WithinTx(ctx, func(ctx context.Context, tx appcompany.Tx) error {
 		locked, err := tx.FindCompanyByIDForUpdate(ctx, created.ID())
 		if err != nil {
 			return err
 		}
 
-		if _, err := locked.Update(company.UpdateInput{
+		locked.Update(company.UpdateInput{
 			Name: &newName,
-		}); err != nil {
-			return err
-		}
+		})
 
 		return tx.UpdateCompany(ctx, locked)
 	})
@@ -158,19 +147,16 @@ func TestStoreRollsBackTransaction(t *testing.T) {
 	pool := newPostgresPool(t, ctx)
 	store := postgres.NewStore(pool)
 
-	created, _, err := company.New(company.CreateInput{
+	created, _ := company.New(company.CreateInput{
 		ID:             uuid.New(),
 		Name:           "Acme",
 		EmployeesCount: 7,
 		Registered:     true,
 		Type:           company.TypeCorporations,
 	})
-	if err != nil {
-		t.Fatalf("new company: %v", err)
-	}
 
 	rollbackErr := errors.New("rollback")
-	err = store.WithinTx(ctx, func(ctx context.Context, tx appcompany.Tx) error {
+	err := store.WithinTx(ctx, func(ctx context.Context, tx appcompany.Tx) error {
 		if err := tx.InsertCompany(ctx, created); err != nil {
 			return err
 		}

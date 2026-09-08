@@ -79,21 +79,17 @@ func NewService(store Store) *Service {
 
 // Create creates a company and stores its outbox event in the same transaction.
 func (s *Service) Create(ctx context.Context, command CreateCommand) (*companydomain.Company, error) {
-	companyType := companydomain.Type(command.Type)
-	if err := validateType(companyType, "type"); err != nil {
+	if err := validateCreateCommand(command); err != nil {
 		return nil, err
 	}
 
-	created, event, err := companydomain.New(companydomain.CreateInput{
+	created, event := companydomain.New(companydomain.CreateInput{
 		Name:           command.Name,
 		Description:    command.Description,
 		EmployeesCount: command.EmployeesCount,
 		Registered:     command.Registered,
-		Type:           companyType,
+		Type:           companydomain.Type(command.Type),
 	})
-	if err != nil {
-		return nil, err
-	}
 
 	if err := s.store.WithinTx(ctx, func(ctx context.Context, tx Tx) error {
 		if err := tx.InsertCompany(ctx, created); err != nil {
@@ -115,15 +111,12 @@ func (s *Service) Create(ctx context.Context, command CreateCommand) (*companydo
 
 // Update patches a company and stores its outbox event in the same transaction.
 func (s *Service) Update(ctx context.Context, command UpdateCommand) (*companydomain.Company, error) {
-	if err := validateID(command.ID); err != nil {
+	if err := validateUpdateCommand(command); err != nil {
 		return nil, err
 	}
 	var companyType *companydomain.Type
 	if command.Type != nil {
 		companyType = lo.ToPtr(companydomain.Type(*command.Type))
-		if err := validateType(*companyType, "type"); err != nil {
-			return nil, err
-		}
 	}
 
 	var updated *companydomain.Company
@@ -133,16 +126,13 @@ func (s *Service) Update(ctx context.Context, command UpdateCommand) (*companydo
 			return mapStoreError(err)
 		}
 
-		event, err := loaded.Update(companydomain.UpdateInput{
+		event := loaded.Update(companydomain.UpdateInput{
 			Name:           command.Name,
 			Description:    command.Description,
 			EmployeesCount: command.EmployeesCount,
 			Registered:     command.Registered,
 			Type:           companyType,
 		})
-		if err != nil {
-			return err
-		}
 		if err := tx.UpdateCompany(ctx, loaded); err != nil {
 			return mapStoreError(err)
 		}
@@ -202,36 +192,6 @@ func (s *Service) FindOne(ctx context.Context, query FindOneQuery) (*companydoma
 	}
 
 	return found, nil
-}
-
-func validateID(id uuid.UUID) error {
-	if id == uuid.Nil {
-		return companydomain.ValidationError{
-			Violations: []companydomain.Violation{
-				{
-					Field:   "id",
-					Message: "is required",
-				},
-			},
-		}
-	}
-
-	return nil
-}
-
-func validateType(companyType companydomain.Type, field string) error {
-	if companyType.Valid() {
-		return nil
-	}
-
-	return companydomain.ValidationError{
-		Violations: []companydomain.Violation{
-			{
-				Field:   field,
-				Message: "is invalid",
-			},
-		},
-	}
 }
 
 func mapStoreError(err error) error {

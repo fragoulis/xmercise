@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -129,19 +130,30 @@ func TestServiceFindOneReturnsCompany(t *testing.T) {
 	}
 }
 
-func TestServiceValidatesIDAndType(t *testing.T) {
+func TestServiceValidatesCommands(t *testing.T) {
 	ctx := context.Background()
 	service := appcompany.NewService(newMemoryStore())
+	longDescription := strings.Repeat("a", 3001)
+	longName := strings.Repeat("é", 16)
 
 	_, err := service.Create(ctx, appcompany.CreateCommand{
-		Name:           "Acme",
-		EmployeesCount: 7,
+		Name:           longName,
+		Description:    &longDescription,
+		EmployeesCount: -1,
 		Type:           "LLC",
 	})
-	assertViolation(t, err, "type")
+	assertViolations(t, err, "name", "description", "employees_count", "type")
+
+	_, err = service.Update(ctx, appcompany.UpdateCommand{
+		Name:           lo.ToPtr(" "),
+		Description:    companydomain.DescriptionPatch{Present: true, Value: &longDescription},
+		EmployeesCount: lo.ToPtr(-1),
+		Type:           lo.ToPtr("LLC"),
+	})
+	assertViolations(t, err, "id", "name", "description", "employees_count", "type")
 
 	_, err = service.FindOne(ctx, appcompany.FindOneQuery{})
-	assertViolation(t, err, "id")
+	assertViolations(t, err, "id")
 }
 
 type memoryStore struct {
@@ -246,11 +258,7 @@ func decodePayload(t *testing.T, payload []byte) decodedPayload {
 
 func mustCompany(t *testing.T, input companydomain.CreateInput) *companydomain.Company {
 	t.Helper()
-	created, _, err := companydomain.New(input)
-	if err != nil {
-		t.Fatalf("new company: %v", err)
-	}
-
+	created, _ := companydomain.New(input)
 	return created
 }
 
@@ -270,29 +278,34 @@ func cloneCompany(c *companydomain.Company) *companydomain.Company {
 		descriptionPtr = lo.ToPtr(description)
 	}
 
-	return companydomain.NewFromDB(companydomain.StoredState{
-		ID:             c.ID(),
-		Name:           c.Name(),
-		Description:    descriptionPtr,
-		EmployeesCount: c.EmployeesCount(),
-		Registered:     c.Registered(),
-		Type:           c.Type(),
-		CreatedAt:      c.CreatedAt(),
-		UpdatedAt:      c.UpdatedAt(),
-	})
+	return companydomain.NewFromDB(
+		c.ID(),
+		c.Name(),
+		descriptionPtr,
+		c.EmployeesCount(),
+		c.Registered(),
+		c.Type(),
+		c.CreatedAt(),
+		c.UpdatedAt(),
+	)
 }
 
-func assertViolation(t *testing.T, err error, field string) {
+func assertViolations(t *testing.T, err error, fields ...string) {
 	t.Helper()
-	var validationErr companydomain.ValidationError
+	var validationErr appcompany.ValidationError
 	if !errors.As(err, &validationErr) {
 		t.Fatalf("error = %T, want ValidationError", err)
 	}
-	for _, violation := range validationErr.Violations {
-		if violation.Field == field {
-			return
+	for _, field := range fields {
+		found := false
+		for _, violation := range validationErr.Violations {
+			if violation.Field == field {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("missing violation for %q in %#v", field, validationErr.Violations)
 		}
 	}
-
-	t.Fatalf("missing violation for %q in %#v", field, validationErr.Violations)
 }

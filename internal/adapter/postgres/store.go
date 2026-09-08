@@ -4,6 +4,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -200,17 +201,26 @@ func deleteCompany(ctx context.Context, db executor, id uuid.UUID) error {
 }
 
 func scanCompany(row pgx.Row) (*company.Company, error) {
-	var state company.StoredState
+	var (
+		id             uuid.UUID
+		name           string
+		description    *string
+		employeesCount int
+		registered     bool
+		companyType    company.Type
+		createdAt      time.Time
+		updatedAt      time.Time
+	)
 
 	err := row.Scan(
-		&state.ID,
-		&state.Name,
-		&state.Description,
-		&state.EmployeesCount,
-		&state.Registered,
-		&state.Type,
-		&state.CreatedAt,
-		&state.UpdatedAt,
+		&id,
+		&name,
+		&description,
+		&employeesCount,
+		&registered,
+		&companyType,
+		&createdAt,
+		&updatedAt,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrCompanyNotFound
@@ -219,7 +229,16 @@ func scanCompany(row pgx.Row) (*company.Company, error) {
 		return nil, err
 	}
 
-	return company.NewFromDB(state), nil
+	return company.NewFromDB(
+		id,
+		name,
+		description,
+		employeesCount,
+		registered,
+		companyType,
+		createdAt,
+		updatedAt,
+	), nil
 }
 
 func companyDescription(c *company.Company) *string {

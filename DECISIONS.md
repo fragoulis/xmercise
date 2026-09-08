@@ -16,12 +16,12 @@
   - Timestamps are assigned by the domain model with `time.Now()`, not by application services or database defaults.
 - Architecture: DDD-oriented layering.
   - Interfaces/adapters layer decodes and encodes only.
-  - Application layer owns use cases, validation, transactions, and outbox creation.
-  - Domain layer owns entities, value objects, invariants, and domain events.
+  - Application layer owns use cases, validation, invariants, transactions, and outbox creation.
+  - Domain layer owns entities, value objects, and domain events.
   - Adapter layer persists primitives/strings and integrates external systems.
-  - Persistence reads use `company.NewFromDB` from stored state without revalidating.
+  - Persistence reads use `company.NewFromDB` without revalidating.
   - Validate business rules in one place, not separately in HTTP and database layers.
-  - go-playground/validator runs on application command structs.
+  - Application services validate command structs.
 - Authentication: HTTP middleware authenticates JWT bearer tokens for all endpoints.
   - No login/user management endpoint unless later required.
   - Dev/test tokens are generated from configured signing settings.
