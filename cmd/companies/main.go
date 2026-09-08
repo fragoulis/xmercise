@@ -51,9 +51,16 @@ func newCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+			handlerOptions := &slog.HandlerOptions{
 				Level: cfg.LogLevel,
-			})))
+			}
+			var handler slog.Handler
+			if cfg.LogFormat == config.LogFormatJSON {
+				handler = slog.NewJSONHandler(os.Stderr, handlerOptions)
+			} else {
+				handler = slog.NewTextHandler(os.Stderr, handlerOptions)
+			}
+			slog.SetDefault(slog.New(handler))
 
 			return run(command.Context(), cfg)
 		},

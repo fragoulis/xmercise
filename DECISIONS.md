@@ -51,8 +51,9 @@
   - Config comes from environment variables, with optional local config file support for developer convenience only.
   - Environment variable prefix: `COMPANIES_`.
   - Required env vars: `COMPANIES_HTTP_ADDR`, `COMPANIES_DATABASE_URL`, `COMPANIES_JWT_SECRET`, `COMPANIES_KAFKA_BROKERS`.
-  - Optional env vars include `COMPANIES_KAFKA_TOPIC`, `COMPANIES_LOG_LEVEL`, `COMPANIES_OUTBOX_POLL_INTERVAL`.
+  - Optional env vars include `COMPANIES_KAFKA_TOPIC`, `COMPANIES_LOG_FORMAT`, `COMPANIES_LOG_LEVEL`, `COMPANIES_OUTBOX_POLL_INTERVAL`.
   - Default Kafka topic: `companies.events`.
+  - Default log format: `text`.
   - Default log level: `info`.
   - Default outbox poll interval: `1s`.
 - CLI/runtime entrypoint: Cobra.

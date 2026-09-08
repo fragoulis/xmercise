@@ -9,6 +9,16 @@ import (
 	"github.com/spf13/viper"
 )
 
+// LogFormat controls the encoding of log records.
+type LogFormat string
+
+const (
+	// LogFormatText emits human-readable log records.
+	LogFormatText LogFormat = "text"
+	// LogFormatJSON emits JSON log records.
+	LogFormatJSON LogFormat = "json"
+)
+
 // Config contains service runtime settings.
 type Config struct {
 	HTTPAddr    string
@@ -16,6 +26,7 @@ type Config struct {
 	JWTSecret   string
 	JWTIssuer   string
 	JWTAudience string
+	LogFormat   LogFormat
 	LogLevel    slog.Level
 }
 
@@ -25,6 +36,7 @@ func Load(path string) (Config, error) {
 	loader.SetEnvPrefix("COMPANIES")
 	loader.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	loader.AutomaticEnv()
+	loader.SetDefault("log_format", LogFormatText)
 	loader.SetDefault("log_level", slog.LevelInfo.String())
 
 	if path != "" {
@@ -32,6 +44,14 @@ func Load(path string) (Config, error) {
 		if err := loader.ReadInConfig(); err != nil {
 			return Config{}, fmt.Errorf("read config: %w", err)
 		}
+	}
+
+	logFormat := LogFormat(strings.ToLower(strings.TrimSpace(loader.GetString("log_format"))))
+	if logFormat == "" {
+		logFormat = LogFormatText
+	}
+	if logFormat != LogFormatText && logFormat != LogFormatJSON {
+		return Config{}, fmt.Errorf("invalid log format %q: must be text or json", logFormat)
 	}
 
 	var logLevel slog.Level
@@ -45,6 +65,7 @@ func Load(path string) (Config, error) {
 		JWTSecret:   loader.GetString("jwt_secret"),
 		JWTIssuer:   loader.GetString("jwt_issuer"),
 		JWTAudience: loader.GetString("jwt_audience"),
+		LogFormat:   logFormat,
 		LogLevel:    logLevel,
 	}
 

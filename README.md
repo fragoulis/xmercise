@@ -30,7 +30,8 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
-Set `COMPANIES_LOG_LEVEL` to `DEBUG`, `INFO`, `WARN`, or `ERROR`. It defaults to `INFO`.
+Set `COMPANIES_LOG_FORMAT` to `text` or `json`. It defaults to `text`. Set `COMPANIES_LOG_LEVEL` to `DEBUG`,
+`INFO`, `WARN`, or `ERROR`. It defaults to `INFO`.
 
 ## Generate the HTTP port
 
