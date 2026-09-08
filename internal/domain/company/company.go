@@ -70,7 +70,7 @@ func New(input CreateInput) (*Company, CompanyCreatedEvent) {
 	company := &Company{
 		id:             id,
 		name:           input.Name,
-		description:    copyDescription(input.Description),
+		description:    lo.If(input.Description != nil, lo.ToPtr(lo.FromPtr(input.Description))).Else(nil),
 		employeesCount: input.EmployeesCount,
 		registered:     input.Registered,
 		companyType:    input.Type,
@@ -98,7 +98,7 @@ func NewFromDB(
 	return &Company{
 		id:             id,
 		name:           name,
-		description:    copyDescription(description),
+		description:    lo.If(description != nil, lo.ToPtr(lo.FromPtr(description))).Else(nil),
 		employeesCount: employeesCount,
 		registered:     registered,
 		companyType:    companyType,
@@ -113,7 +113,10 @@ func (c *Company) Update(input UpdateInput) CompanyUpdatedEvent {
 		c.name = *input.Name
 	}
 	if input.Description.Present {
-		c.description = copyDescription(input.Description.Value)
+		c.description = lo.If(
+			input.Description.Value != nil,
+			lo.ToPtr(lo.FromPtr(input.Description.Value)),
+		).Else(nil)
 	}
 	if input.EmployeesCount != nil {
 		c.employeesCount = *input.EmployeesCount
@@ -182,12 +185,4 @@ func (c *Company) CreatedAt() time.Time {
 // UpdatedAt returns the latest update time.
 func (c *Company) UpdatedAt() time.Time {
 	return c.updatedAt
-}
-
-func copyDescription(description *string) *string {
-	if description == nil {
-		return nil
-	}
-
-	return lo.ToPtr(*description)
 }
