@@ -67,16 +67,16 @@ func New(input CreateInput) (*Company, CompanyCreatedEvent) {
 	}
 
 	createdAt := time.Now()
-	company := newCompany(
-		id,
-		input.Name,
-		input.Description,
-		input.EmployeesCount,
-		input.Registered,
-		input.Type,
-		createdAt,
-		createdAt,
-	)
+	company := &Company{
+		id:             id,
+		name:           input.Name,
+		description:    copyDescription(input.Description),
+		employeesCount: input.EmployeesCount,
+		registered:     input.Registered,
+		companyType:    input.Type,
+		createdAt:      createdAt,
+		updatedAt:      createdAt,
+	}
 
 	return company, CompanyCreatedEvent{
 		CompanyID:  company.id,
@@ -95,16 +95,16 @@ func NewFromDB(
 	createdAt time.Time,
 	updatedAt time.Time,
 ) *Company {
-	return newCompany(
-		id,
-		name,
-		description,
-		employeesCount,
-		registered,
-		companyType,
-		createdAt,
-		updatedAt,
-	)
+	return &Company{
+		id:             id,
+		name:           name,
+		description:    copyDescription(description),
+		employeesCount: employeesCount,
+		registered:     registered,
+		companyType:    companyType,
+		createdAt:      createdAt,
+		updatedAt:      updatedAt,
+	}
 }
 
 // Update patches a company and returns the matching domain event.
@@ -182,28 +182,6 @@ func (c *Company) CreatedAt() time.Time {
 // UpdatedAt returns the latest update time.
 func (c *Company) UpdatedAt() time.Time {
 	return c.updatedAt
-}
-
-func newCompany(
-	id uuid.UUID,
-	name string,
-	description *string,
-	employeesCount int,
-	registered bool,
-	companyType Type,
-	createdAt time.Time,
-	updatedAt time.Time,
-) *Company {
-	return &Company{
-		id:             id,
-		name:           name,
-		description:    copyDescription(description),
-		employeesCount: employeesCount,
-		registered:     registered,
-		companyType:    companyType,
-		createdAt:      createdAt,
-		updatedAt:      updatedAt,
-	}
 }
 
 func copyDescription(description *string) *string {
