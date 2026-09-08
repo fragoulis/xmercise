@@ -10,9 +10,7 @@ import (
 
 // JWTConfig contains bearer token validation settings.
 type JWTConfig struct {
-	Secret   string
-	Issuer   string
-	Audience string
+	Secret string
 }
 
 // JWTMiddleware authenticates bearer tokens with HS256.
@@ -46,12 +44,6 @@ func (m *JWTMiddleware) valid(rawToken string) bool {
 		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
 		jwt.WithExpirationRequired(),
 		jwt.WithIssuedAt(),
-	}
-	if m.config.Issuer != "" {
-		options = append(options, jwt.WithIssuer(m.config.Issuer))
-	}
-	if m.config.Audience != "" {
-		options = append(options, jwt.WithAudience(m.config.Audience))
 	}
 
 	token, err := jwt.ParseWithClaims(rawToken, claims, func(token *jwt.Token) (any, error) {

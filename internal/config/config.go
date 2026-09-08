@@ -24,8 +24,6 @@ type Config struct {
 	HTTPAddr    string
 	DatabaseURL string
 	JWTSecret   string
-	JWTIssuer   string
-	JWTAudience string
 	LogFormat   LogFormat
 	LogLevel    slog.Level
 }
@@ -63,8 +61,6 @@ func Load(path string) (Config, error) {
 		HTTPAddr:    loader.GetString("http_addr"),
 		DatabaseURL: loader.GetString("database_url"),
 		JWTSecret:   loader.GetString("jwt_secret"),
-		JWTIssuer:   loader.GetString("jwt_issuer"),
-		JWTAudience: loader.GetString("jwt_audience"),
 		LogFormat:   logFormat,
 		LogLevel:    logLevel,
 	}

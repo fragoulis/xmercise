@@ -84,9 +84,7 @@ func run(ctx context.Context, cfg config.Config) error {
 	companies := appcompany.NewService(store)
 	strictHandler := httpadapter.NewStrictHandler(httpadapter.NewServer(companies), nil)
 	auth := httpadapter.NewJWTMiddleware(httpadapter.JWTConfig{
-		Secret:   cfg.JWTSecret,
-		Issuer:   cfg.JWTIssuer,
-		Audience: cfg.JWTAudience,
+		Secret: cfg.JWTSecret,
 	})
 	server := &http.Server{
 		Addr:              cfg.HTTPAddr,
