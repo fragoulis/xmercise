@@ -38,16 +38,16 @@ type Tx interface {
 
 // CreateCommand contains data for creating a company.
 type CreateCommand struct {
-	Name           string
+	Name           *string
 	Description    *string
-	EmployeesCount int
-	Registered     bool
-	Type           string
+	EmployeesCount *int
+	Registered     *bool
+	Type           *string
 }
 
 // UpdateCommand contains patch data for a company.
 type UpdateCommand struct {
-	ID             uuid.UUID
+	ID             string
 	Name           *string
 	Description    companydomain.DescriptionPatch
 	EmployeesCount *int
@@ -57,12 +57,12 @@ type UpdateCommand struct {
 
 // DeleteCommand identifies a company to delete.
 type DeleteCommand struct {
-	ID uuid.UUID
+	ID string
 }
 
 // FindOneQuery identifies a company to retrieve.
 type FindOneQuery struct {
-	ID uuid.UUID
+	ID string
 }
 
 // Service coordinates company use cases.
@@ -84,11 +84,11 @@ func (s *Service) Create(ctx context.Context, command CreateCommand) (*companydo
 	}
 
 	created, event := companydomain.New(companydomain.CreateInput{
-		Name:           command.Name,
+		Name:           *command.Name,
 		Description:    command.Description,
-		EmployeesCount: command.EmployeesCount,
-		Registered:     command.Registered,
-		Type:           companydomain.Type(command.Type),
+		EmployeesCount: *command.EmployeesCount,
+		Registered:     *command.Registered,
+		Type:           companydomain.Type(*command.Type),
 	})
 
 	if err := s.store.WithinTx(ctx, func(ctx context.Context, tx Tx) error {
@@ -111,7 +111,8 @@ func (s *Service) Create(ctx context.Context, command CreateCommand) (*companydo
 
 // Update patches a company and stores its outbox event in the same transaction.
 func (s *Service) Update(ctx context.Context, command UpdateCommand) (*companydomain.Company, error) {
-	if err := validateUpdateCommand(command); err != nil {
+	id, err := validateUpdateCommand(command)
+	if err != nil {
 		return nil, err
 	}
 	var companyType *companydomain.Type
@@ -121,7 +122,7 @@ func (s *Service) Update(ctx context.Context, command UpdateCommand) (*companydo
 
 	var updated *companydomain.Company
 	if err := s.store.WithinTx(ctx, func(ctx context.Context, tx Tx) error {
-		loaded, err := tx.FindCompanyByIDForUpdate(ctx, command.ID)
+		loaded, err := tx.FindCompanyByIDForUpdate(ctx, id)
 		if err != nil {
 			return mapStoreError(err)
 		}
@@ -156,22 +157,23 @@ func (s *Service) Update(ctx context.Context, command UpdateCommand) (*companydo
 
 // Delete hard-deletes a company and stores its outbox event in the same transaction.
 func (s *Service) Delete(ctx context.Context, command DeleteCommand) error {
-	if err := validateID(command.ID); err != nil {
+	id, err := validateID(command.ID)
+	if err != nil {
 		return err
 	}
 
 	return s.store.WithinTx(ctx, func(ctx context.Context, tx Tx) error {
-		loaded, err := tx.FindCompanyByIDForUpdate(ctx, command.ID)
+		loaded, err := tx.FindCompanyByIDForUpdate(ctx, id)
 		if err != nil {
 			return mapStoreError(err)
 		}
 
 		event := loaded.Deleted()
-		if err := tx.DeleteCompany(ctx, command.ID); err != nil {
+		if err := tx.DeleteCompany(ctx, id); err != nil {
 			return mapStoreError(err)
 		}
 
-		outboxEvent, err := buildOutboxEvent(event, deleteData(command))
+		outboxEvent, err := buildOutboxEvent(event, deleteData{ID: id})
 		if err != nil {
 			return err
 		}
@@ -182,11 +184,12 @@ func (s *Service) Delete(ctx context.Context, command DeleteCommand) error {
 
 // FindOne returns one company by ID.
 func (s *Service) FindOne(ctx context.Context, query FindOneQuery) (*companydomain.Company, error) {
-	if err := validateID(query.ID); err != nil {
+	id, err := validateID(query.ID)
+	if err != nil {
 		return nil, err
 	}
 
-	found, err := s.store.FindCompanyByID(ctx, query.ID)
+	found, err := s.store.FindCompanyByID(ctx, id)
 	if err != nil {
 		return nil, mapStoreError(err)
 	}

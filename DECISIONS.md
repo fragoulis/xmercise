@@ -72,6 +72,9 @@
   - `oapi-codegen` v2.4.1 generates the Chi HTTP adapter and strict server port at `internal/port/http/openapi.gen.go`.
   - Generation is run with `make generate`.
   - JSON request decoding is strict. Unknown fields are rejected.
+  - Company IDs are plain strings at the HTTP boundary. Application services parse and validate UUIDs.
+  - Create request fields are optional in OpenAPI-generated Go types so application validation can distinguish omitted values from zero values.
+  - HTTP errors use the OpenAPI `Error` JSON schema, including router and request-decoding failures.
 - Docker: Dockerfile plus Docker Compose for local dependencies.
   - Dockerfile must be multi-stage.
   - Final stage must contain only the compiled runtime and required runtime assets.

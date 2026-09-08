@@ -22,11 +22,11 @@ func TestServiceCreatePersistsCompanyAndOutboxEvent(t *testing.T) {
 	description := "shipping"
 
 	created, err := service.Create(ctx, appcompany.CreateCommand{
-		Name:           "Acme",
+		Name:           lo.ToPtr("Acme"),
 		Description:    &description,
-		EmployeesCount: 7,
-		Registered:     true,
-		Type:           "Corporations",
+		EmployeesCount: lo.ToPtr(7),
+		Registered:     lo.ToPtr(true),
+		Type:           lo.ToPtr("Corporations"),
 	})
 	if err != nil {
 		t.Fatalf("create company: %v", err)
@@ -62,7 +62,7 @@ func TestServiceUpdatePatchesCompanyWithOutboxEvent(t *testing.T) {
 
 	name := "Workers Coop"
 	updated, err := service.Update(ctx, appcompany.UpdateCommand{
-		ID:   initial.ID(),
+		ID:   initial.ID().String(),
 		Name: &name,
 		Type: lo.ToPtr("Cooperative"),
 	})
@@ -92,7 +92,7 @@ func TestServiceDeleteRemovesCompanyWithOutboxEvent(t *testing.T) {
 	service := appcompany.NewService(store)
 
 	err := service.Delete(ctx, appcompany.DeleteCommand{
-		ID: created.ID(),
+		ID: created.ID().String(),
 	})
 	if err != nil {
 		t.Fatalf("delete company: %v", err)
@@ -120,7 +120,7 @@ func TestServiceFindOneReturnsCompany(t *testing.T) {
 	service := appcompany.NewService(store)
 
 	loaded, err := service.FindOne(ctx, appcompany.FindOneQuery{
-		ID: created.ID(),
+		ID: created.ID().String(),
 	})
 	if err != nil {
 		t.Fatalf("find one: %v", err)
@@ -137,12 +137,12 @@ func TestServiceValidatesCommands(t *testing.T) {
 	longName := strings.Repeat("é", 16)
 
 	_, err := service.Create(ctx, appcompany.CreateCommand{
-		Name:           longName,
+		Name:           &longName,
 		Description:    &longDescription,
-		EmployeesCount: -1,
-		Type:           "LLC",
+		EmployeesCount: lo.ToPtr(-1),
+		Type:           lo.ToPtr("LLC"),
 	})
-	assertViolations(t, err, "name", "description", "employees_count", "type")
+	assertViolations(t, err, "name", "description", "employees_count", "registered", "type")
 
 	_, err = service.Update(ctx, appcompany.UpdateCommand{
 		Name:           lo.ToPtr(" "),
@@ -153,6 +153,9 @@ func TestServiceValidatesCommands(t *testing.T) {
 	assertViolations(t, err, "id", "name", "description", "employees_count", "type")
 
 	_, err = service.FindOne(ctx, appcompany.FindOneQuery{})
+	assertViolations(t, err, "id")
+
+	_, err = service.FindOne(ctx, appcompany.FindOneQuery{ID: "1"})
 	assertViolations(t, err, "id")
 }
 

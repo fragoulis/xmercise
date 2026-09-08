@@ -15,49 +15,104 @@ const (
 )
 
 func validateCreateCommand(command CreateCommand) error {
-	return validationError(validateCompanyFields(
-		&command.Name,
+	violations := requiredCreateViolations(command)
+	violations = append(violations, validateCompanyFields(
+		command.Name,
 		command.Description,
-		&command.EmployeesCount,
-		&command.Type,
-	))
+		command.EmployeesCount,
+		command.Type,
+	)...)
+
+	return validationError(violations)
 }
 
-func validateUpdateCommand(command UpdateCommand) error {
+func requiredCreateViolations(command CreateCommand) []Violation {
 	var violations []Violation
-	if command.ID == uuid.Nil {
+	if command.Name == nil {
 		violations = append(violations, Violation{
-			Field:   "id",
+			Field:   "name",
+			Message: "is required",
+		})
+	}
+	if command.EmployeesCount == nil {
+		violations = append(violations, Violation{
+			Field:   "employees_count",
+			Message: "is required",
+		})
+	}
+	if command.Registered == nil {
+		violations = append(violations, Violation{
+			Field:   "registered",
+			Message: "is required",
+		})
+	}
+	if command.Type == nil {
+		violations = append(violations, Violation{
+			Field:   "type",
 			Message: "is required",
 		})
 	}
 
-	var description *string
-	if command.Description.Present {
-		description = command.Description.Value
-	}
-
-	return validationError(append(violations, validateCompanyFields(
-		command.Name,
-		description,
-		command.EmployeesCount,
-		command.Type,
-	)...))
+	return violations
 }
 
-func validateID(id uuid.UUID) error {
-	if id == uuid.Nil {
-		return ValidationError{
-			Violations: []Violation{
-				{
-					Field:   "id",
-					Message: "is required",
-				},
-			},
+func validateUpdateCommand(command UpdateCommand) (uuid.UUID, error) {
+	id, idViolation := parseID(command.ID)
+	violations := validateCompanyFields(
+		command.Name,
+		descriptionValue(command.Description),
+		command.EmployeesCount,
+		command.Type,
+	)
+	if idViolation != nil {
+		violations = append([]Violation{*idViolation}, violations...)
+	}
+
+	return id, validationError(violations)
+}
+
+func validateID(value string) (uuid.UUID, error) {
+	id, violation := parseID(value)
+	if violation == nil {
+		return id, nil
+	}
+
+	return uuid.Nil, ValidationError{
+		Violations: []Violation{*violation},
+	}
+}
+
+func parseID(value string) (uuid.UUID, *Violation) {
+	if strings.TrimSpace(value) == "" {
+		return uuid.Nil, &Violation{
+			Field:   "id",
+			Message: "is required",
 		}
 	}
 
-	return nil
+	id, err := uuid.Parse(value)
+	if err != nil {
+		return uuid.Nil, &Violation{
+			Field:   "id",
+			Message: "must be a valid UUID",
+		}
+	}
+	if id == uuid.Nil {
+		return uuid.Nil, &Violation{
+			Field:   "id",
+			Message: "is required",
+		}
+	}
+
+	return id, nil
+}
+
+func descriptionValue(patch companydomain.DescriptionPatch) *string {
+	if !patch.Present {
+		return nil
+	}
+
+	return patch.Value
 }
 
 func validateCompanyFields(

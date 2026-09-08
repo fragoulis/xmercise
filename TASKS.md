@@ -19,3 +19,4 @@
 [x] Make log level configurable
 [x] Make log format configurable
 [x] Add curl API smoke test script
+[x] Validate HTTP company IDs in the application layer and return JSON errors

@@ -82,13 +82,13 @@ func run(ctx context.Context, cfg config.Config) error {
 
 	store := postgres.NewStore(pool)
 	companies := appcompany.NewService(store)
-	strictHandler := httpadapter.NewStrictHandler(httpadapter.NewServer(companies), nil)
+	strictHandler := httpadapter.NewJSONStrictHandler(httpadapter.NewServer(companies))
 	auth := httpadapter.NewJWTMiddleware(httpadapter.JWTConfig{
 		Secret: cfg.JWTSecret,
 	})
 	server := &http.Server{
 		Addr:              cfg.HTTPAddr,
-		Handler:           auth.Handler(httpadapter.Handler(strictHandler)),
+		Handler:           auth.Handler(httpadapter.NewJSONHandler(strictHandler)),
 		ReadHeaderTimeout: readHeaderTimeout,
 		ReadTimeout:       readTimeout,
 		WriteTimeout:      writeTimeout,

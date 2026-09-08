@@ -15,7 +15,6 @@ import (
 	"github.com/oapi-codegen/nullable"
 	"github.com/oapi-codegen/runtime"
 	strictnethttp "github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
-	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 const (
@@ -27,7 +26,7 @@ type Company struct {
 	CreatedAt      *time.Time                `json:"created_at,omitempty"`
 	Description    nullable.Nullable[string] `json:"description"`
 	EmployeesCount int32                     `json:"employees_count"`
-	Id             *openapi_types.UUID       `json:"id,omitempty"`
+	Id             *string                   `json:"id,omitempty"`
 	Name           string                    `json:"name"`
 	Registered     bool                      `json:"registered"`
 	Type           string                    `json:"type"`
@@ -36,11 +35,19 @@ type Company struct {
 
 // CreateCompanyRequest defines model for CreateCompanyRequest.
 type CreateCompanyRequest struct {
-	Description    nullable.Nullable[string] `json:"description,omitempty"`
-	EmployeesCount int32                     `json:"employees_count"`
-	Name           string                    `json:"name"`
-	Registered     bool                      `json:"registered"`
-	Type           string                    `json:"type"`
+	Description nullable.Nullable[string] `json:"description,omitempty"`
+
+	// EmployeesCount Required.
+	EmployeesCount *int32 `json:"employees_count,omitempty"`
+
+	// Name Required.
+	Name *string `json:"name,omitempty"`
+
+	// Registered Required.
+	Registered *bool `json:"registered,omitempty"`
+
+	// Type Required.
+	Type *string `json:"type,omitempty"`
 }
 
 // Error defines model for Error.
@@ -67,7 +74,7 @@ type Violation struct {
 }
 
 // CompanyID defines model for CompanyID.
-type CompanyID = openapi_types.UUID
+type CompanyID = string
 
 // BadRequest defines model for BadRequest.
 type BadRequest = Error
@@ -453,6 +460,15 @@ func (response DeleteCompany204Response) VisitDeleteCompanyResponse(w http.Respo
 	return nil
 }
 
+type DeleteCompany400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response DeleteCompany400JSONResponse) VisitDeleteCompanyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DeleteCompany401JSONResponse struct{ UnauthorizedJSONResponse }
 
 func (response DeleteCompany401JSONResponse) VisitDeleteCompanyResponse(w http.ResponseWriter) error {
@@ -484,6 +500,15 @@ type GetCompany200JSONResponse Company
 func (response GetCompany200JSONResponse) VisitGetCompanyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetCompany400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response GetCompany400JSONResponse) VisitGetCompanyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }

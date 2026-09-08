@@ -54,6 +54,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Company'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -100,6 +102,8 @@ paths:
       responses:
         '204':
           description: Company deleted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -111,10 +115,9 @@ components:
       name: id
       in: path
       required: true
-      description: Company UUID.
+      description: Company identifier.
       schema:
         type: string
-        format: uuid
   schemas:
     Company:
       type: object
@@ -131,7 +134,6 @@ components:
       properties:
         id:
           type: string
-          format: uuid
           readOnly: true
         name:
           type: string
@@ -160,14 +162,10 @@ components:
     CreateCompanyRequest:
       type: object
       additionalProperties: false
-      required:
-        - name
-        - employees_count
-        - registered
-        - type
       properties:
         name:
           type: string
+          description: Required.
           minLength: 1
           maxLength: 15
         description:
@@ -178,10 +176,13 @@ components:
           type: integer
           format: int32
           minimum: 0
+          description: Required.
         registered:
           type: boolean
+          description: Required.
         type:
           type: string
+          description: Required.
     UpdateCompanyRequest:
       type: object
       additionalProperties: false
