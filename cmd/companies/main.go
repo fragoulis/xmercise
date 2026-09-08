@@ -14,9 +14,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/cobra"
 
+	"github.com/fragoulis/xmercise/internal/adapter/postgres"
 	appcompany "github.com/fragoulis/xmercise/internal/application/company"
 	"github.com/fragoulis/xmercise/internal/config"
-	"github.com/fragoulis/xmercise/internal/infrastructure/postgres"
 	httpadapter "github.com/fragoulis/xmercise/internal/port/http"
 )
 

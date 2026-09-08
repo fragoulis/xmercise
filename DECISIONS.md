@@ -18,7 +18,7 @@
   - Interfaces/adapters layer decodes and encodes only.
   - Application layer owns use cases, validation, transactions, and outbox creation.
   - Domain layer owns entities, value objects, invariants, and domain events.
-  - Infrastructure layer persists primitives/strings and integrates external systems.
+  - Adapter layer persists primitives/strings and integrates external systems.
   - Persistence reads use `company.NewFromDB` from stored state without revalidating.
   - Validate business rules in one place, not separately in HTTP and database layers.
   - go-playground/validator runs on application command structs.

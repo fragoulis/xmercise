@@ -18,10 +18,10 @@ import (
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 
+	"github.com/fragoulis/xmercise/internal/adapter/postgres"
 	appcompany "github.com/fragoulis/xmercise/internal/application/company"
 	"github.com/fragoulis/xmercise/internal/application/outbox"
 	"github.com/fragoulis/xmercise/internal/domain/company"
-	"github.com/fragoulis/xmercise/internal/infrastructure/postgres"
 )
 
 func TestStorePersistsCompanyAndOutboxInTransaction(t *testing.T) {
