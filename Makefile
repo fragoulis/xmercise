@@ -21,7 +21,7 @@ deps: ## Start local dependencies.
 
 .PHONY: run
 run: ## Run the service.
-	go run ./cmd/companies
+	go run ./cmd/exercise
 
 .PHONY: db-shell
 db-shell:

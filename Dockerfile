@@ -6,12 +6,12 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . ./
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/companies ./cmd/companies
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/exercise ./cmd/exercise
 
 FROM gcr.io/distroless/static-debian12:nonroot
 
-COPY --from=build /out/companies /companies
+COPY --from=build /out/exercise /exercise
 
 EXPOSE 8080
 USER nonroot:nonroot
-ENTRYPOINT ["/companies"]
+ENTRYPOINT ["/exercise"]
