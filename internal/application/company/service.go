@@ -253,16 +253,10 @@ type deleteData struct {
 }
 
 func companyDataFromCompany(c *companydomain.Company) companyData {
-	description, ok := c.Description()
-	var descriptionPtr *string
-	if ok {
-		descriptionPtr = lo.ToPtr(description)
-	}
-
 	return companyData{
 		ID:             c.ID(),
 		Name:           c.Name(),
-		Description:    descriptionPtr,
+		Description:    c.Description(),
 		EmployeesCount: c.EmployeesCount(),
 		Registered:     c.Registered(),
 		Type:           c.Type(),

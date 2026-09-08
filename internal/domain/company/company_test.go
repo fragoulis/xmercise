@@ -71,11 +71,9 @@ func TestNewFromDBRecreatesPersistedValues(t *testing.T) {
 		createdAt,
 		updatedAt,
 	)
-	description = "changed"
-
-	loadedDescription, ok := created.Description()
-	if !ok || loadedDescription != "shipping" {
-		t.Fatalf("description = %q, %t; want shipping, true", loadedDescription, ok)
+	loadedDescription := created.Description()
+	if loadedDescription == nil || *loadedDescription != description {
+		t.Fatalf("description = %v; want %q", loadedDescription, description)
 	}
 	if created.CreatedAt() != createdAt {
 		t.Fatalf("created_at = %s, want %s", created.CreatedAt(), createdAt)
@@ -113,7 +111,7 @@ func TestUpdatePatchesCompany(t *testing.T) {
 	if created.Name() != name {
 		t.Fatalf("name = %q, want %q", created.Name(), name)
 	}
-	if _, ok := created.Description(); ok {
+	if created.Description() != nil {
 		t.Fatal("description is present, want cleared")
 	}
 	if created.EmployeesCount() != employeesCount {

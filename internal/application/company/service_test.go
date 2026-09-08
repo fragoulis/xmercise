@@ -272,16 +272,10 @@ func cloneCompanies(companies map[uuid.UUID]*companydomain.Company) map[uuid.UUI
 }
 
 func cloneCompany(c *companydomain.Company) *companydomain.Company {
-	description, ok := c.Description()
-	var descriptionPtr *string
-	if ok {
-		descriptionPtr = lo.ToPtr(description)
-	}
-
 	return companydomain.NewFromDB(
 		c.ID(),
 		c.Name(),
-		descriptionPtr,
+		c.Description(),
 		c.EmployeesCount(),
 		c.Registered(),
 		c.Type(),

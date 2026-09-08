@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/samber/lo"
 )
 
 // Type is a company legal type.
@@ -70,7 +69,7 @@ func New(input CreateInput) (*Company, CompanyCreatedEvent) {
 	company := &Company{
 		id:             id,
 		name:           input.Name,
-		description:    lo.If(input.Description != nil, lo.ToPtr(lo.FromPtr(input.Description))).Else(nil),
+		description:    input.Description,
 		employeesCount: input.EmployeesCount,
 		registered:     input.Registered,
 		companyType:    input.Type,
@@ -98,7 +97,7 @@ func NewFromDB(
 	return &Company{
 		id:             id,
 		name:           name,
-		description:    lo.If(description != nil, lo.ToPtr(lo.FromPtr(description))).Else(nil),
+		description:    description,
 		employeesCount: employeesCount,
 		registered:     registered,
 		companyType:    companyType,
@@ -113,10 +112,7 @@ func (c *Company) Update(input UpdateInput) CompanyUpdatedEvent {
 		c.name = *input.Name
 	}
 	if input.Description.Present {
-		c.description = lo.If(
-			input.Description.Value != nil,
-			lo.ToPtr(lo.FromPtr(input.Description.Value)),
-		).Else(nil)
+		c.description = input.Description.Value
 	}
 	if input.EmployeesCount != nil {
 		c.employeesCount = *input.EmployeesCount
@@ -154,12 +150,8 @@ func (c *Company) Name() string {
 }
 
 // Description returns the optional description.
-func (c *Company) Description() (string, bool) {
-	if c.description == nil {
-		return "", false
-	}
-
-	return *c.description, true
+func (c *Company) Description() *string {
+	return c.description
 }
 
 // EmployeesCount returns the number of employees.

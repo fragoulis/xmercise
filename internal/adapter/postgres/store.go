@@ -138,7 +138,7 @@ func insertCompany(ctx context.Context, db executor, c *company.Company) error {
 	`,
 		c.ID(),
 		c.Name(),
-		companyDescription(c),
+		c.Description(),
 		c.EmployeesCount(),
 		c.Registered(),
 		c.Type(),
@@ -171,7 +171,7 @@ func updateCompany(ctx context.Context, db executor, c *company.Company) error {
 	`,
 		c.ID(),
 		c.Name(),
-		companyDescription(c),
+		c.Description(),
 		c.EmployeesCount(),
 		c.Registered(),
 		c.Type(),
@@ -239,15 +239,6 @@ func scanCompany(row pgx.Row) (*company.Company, error) {
 		createdAt,
 		updatedAt,
 	), nil
-}
-
-func companyDescription(c *company.Company) *string {
-	description, ok := c.Description()
-	if !ok {
-		return nil
-	}
-
-	return &description
 }
 
 func mapCompanyWriteError(err error) error {

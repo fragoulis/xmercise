@@ -135,8 +135,8 @@ func descriptionPatch(value nullable.Nullable[string]) domaincompany.Description
 
 func companyResponse(company *domaincompany.Company) Company {
 	description := nullable.NewNullNullable[string]()
-	if value, ok := company.Description(); ok {
-		description = nullable.NewNullableWithValue(value)
+	if value := company.Description(); value != nil {
+		description = nullable.NewNullableWithValue(*value)
 	}
 
 	id := company.ID()

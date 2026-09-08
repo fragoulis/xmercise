@@ -14,3 +14,4 @@
 [x] Standardize Go formatting
 [x] Rename internal/infrastructure to internal/adapter
 [x] Keep company validation in the application service
+[x] Return the domain company description as an optional pointer

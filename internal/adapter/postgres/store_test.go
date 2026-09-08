@@ -65,9 +65,9 @@ func TestStorePersistsCompanyAndOutboxInTransaction(t *testing.T) {
 	if loaded.ID() != created.ID() || loaded.Name() != "Acme" || loaded.EmployeesCount() != 7 {
 		t.Fatalf("loaded company mismatch: %#v", loaded)
 	}
-	loadedDescription, ok := loaded.Description()
-	if !ok || loadedDescription != description {
-		t.Fatalf("description = %q, %t; want %q, true", loadedDescription, ok, description)
+	loadedDescription := loaded.Description()
+	if loadedDescription == nil || *loadedDescription != description {
+		t.Fatalf("description = %v; want %q", loadedDescription, description)
 	}
 
 	var outboxCount int

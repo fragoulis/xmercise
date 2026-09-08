@@ -13,6 +13,7 @@
   - Concurrent updates rely on database transaction locking.
   - PATCH and DELETE select the company row `FOR UPDATE` inside the transaction.
   - Companies include `created_at` and `updated_at` timestamps in DB, domain, and API responses.
+  - Domain company descriptions use `*string`; `nil` means absent.
   - Timestamps are assigned by the domain model with `time.Now()`, not by application services or database defaults.
 - Architecture: DDD-oriented layering.
   - Interfaces/adapters layer decodes and encodes only.
