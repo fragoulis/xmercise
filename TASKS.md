@@ -17,3 +17,4 @@
 [x] Return the domain company description as an optional pointer
 [x] Introduce a production Dockerfile
 [x] Make log level configurable
+[x] Add curl API smoke test script

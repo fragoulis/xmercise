@@ -80,6 +80,16 @@ make run
 
 The server listens on `COMPANIES_HTTP_ADDR`. Requests require an HS256 bearer token with `sub`, `exp`, and `iat` claims, signed with `COMPANIES_JWT_SECRET`.
 
+## Exercise the API
+
+With the service running, provide a valid bearer token and run the curl smoke test:
+
+```sh
+TOKEN=<jwt> ./scripts/test-api.sh
+```
+
+Set `BASE_URL` to target another address. The script exercises one successful request and one validation failure for every endpoint.
+
 ## Useful commands
 
 Open a PostgreSQL shell:
