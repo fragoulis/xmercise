@@ -2,6 +2,8 @@ package config_test
 
 import (
 	"log/slog"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/fragoulis/xmercise/internal/config"
@@ -45,6 +47,27 @@ func TestLoad(t *testing.T) {
 				t.Errorf("LogLevel = %v, want %v", cfg.LogLevel, test.wantLevel)
 			}
 		})
+	}
+}
+
+func TestLoadFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	contents := []byte(`
+http_addr: ":8080"
+database_url: "postgres://companies:companies@localhost/companies"
+jwt_secret: "secret"
+log_level: debug
+`)
+	if err := os.WriteFile(path, contents, 0o600); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	cfg, err := config.Load(path)
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.LogLevel != slog.LevelDebug {
+		t.Errorf("LogLevel = %v, want %v", cfg.LogLevel, slog.LevelDebug)
 	}
 }
 

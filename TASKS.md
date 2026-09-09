@@ -21,3 +21,4 @@
 [x] Add curl API smoke test script
 [x] Validate HTTP company IDs in the application layer and return JSON errors
 [x] Add GitHub Actions lint and test CI
+[x] Add local debug logging config file

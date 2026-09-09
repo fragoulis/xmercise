@@ -33,6 +33,18 @@ cp .env.example .env
 Set `COMPANIES_LOG_FORMAT` to `text` or `json`. It defaults to `text`. Set `COMPANIES_LOG_LEVEL` to `DEBUG`,
 `INFO`, `WARN`, or `ERROR`. It defaults to `INFO`.
 
+`config.yaml` sets the log level to `debug` for local development. Run the service with it:
+
+```sh
+make run CONFIG=config.yaml
+```
+
+`COMPANIES_LOG_LEVEL` overrides the file value:
+
+```sh
+make run CONFIG=config.yaml COMPANIES_LOG_LEVEL=info
+```
+
 ## Generate the HTTP port
 
 The OpenAPI contract is `api/openapi.yaml`. Regenerate the strict Chi HTTP port after changing it:

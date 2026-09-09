@@ -56,6 +56,7 @@
   - Default log format: `text`.
   - Default log level: `info`.
   - Default outbox poll interval: `1s`.
+  - `config.yaml` enables debug logging for local development. Environment variables override file values.
 - CLI/runtime entrypoint: Cobra.
 - HTTP stack: chi router, native net/http server with explicit timeouts, structured logging with slog.
   - Routes are versioned under `/v1`.

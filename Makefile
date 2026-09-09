@@ -19,9 +19,11 @@ generate: ## Generate HTTP port from the OpenAPI contract.
 deps: ## Start local dependencies.
 	docker compose up
 
+CONFIG ?=
+
 .PHONY: run
 run: ## Run the service.
-	go run ./cmd/exercise
+	go run ./cmd/exercise $(if $(CONFIG),--config "$(CONFIG)")
 
 .PHONY: db-shell
 db-shell:
