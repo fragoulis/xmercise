@@ -16,6 +16,8 @@ Install `goose` if needed:
 go install github.com/pressly/goose/v3/cmd/goose@latest
 ```
 
+### Optional
+
 Install `golangci-lint` if needed:
 
 ```sh
@@ -32,26 +34,19 @@ The precedence goes:
  2. Values in config.yaml
  3. Built-in defaults
 
-Copy the example environment file:
+Optionally, you can opy the example environment file:
 
 ```sh
 cp .env.example .env
 ```
 
-```sh
-make run
-# go run ./cmd/exercise
-```
-
-or
-
-```sh
-go run ./cmd/exercise --config config.yaml
-```
+This is helpful if using environment variables.
 
 ## Generate the HTTP port
 
-The OpenAPI contract is `api/openapi.yaml`. Regenerate the strict Chi HTTP port after changing it:
+The OpenAPI contract is defined at `api/openapi.yaml`.
+
+To generate the http port, run:
 
 ```sh
 make generate
@@ -59,13 +54,13 @@ make generate
 
 ## Start the database
 
-Start PostgreSQL with Docker Compose:
+Start PostgreSQL in the foreground with Docker Compose:
 
 ```sh
 make deps
 ```
 
-This starts PostgreSQL in the foreground. In another terminal, continue with migrations.
+In another terminal, continue with migrations.
 
 ## Run migrations
 
@@ -73,18 +68,6 @@ Apply all database migrations:
 
 ```sh
 make migrate-up
-```
-
-Check migration status:
-
-```sh
-make migrate-status
-```
-
-Rollback the latest migration:
-
-```sh
-make migrate-down
 ```
 
 ## Run the service
@@ -95,17 +78,21 @@ Start the API after applying migrations:
 make run
 ```
 
-The server listens on `COMPANIES_HTTP_ADDR`. Requests require an HS256 bearer token with `sub`, `exp`, and `iat` claims, signed with `COMPANIES_JWT_SECRET`.
+same as `go run ./cmd/exercise`.
+
+or to use the config with your overrides:
+
+```sh
+go run ./cmd/exercise --config config.yaml
+```
 
 ## Exercise the API
 
-With the service running, provide a valid bearer token and run the curl smoke test:
+With the service and the database running, provide a valid bearer token and run the curl smoke test:
 
 ```sh
 TOKEN=<jwt> ./scripts/test-api.sh
 ```
-
-Set `BASE_URL` to target another address. The script exercises one successful request and one validation failure for every endpoint.
 
 ## Useful commands
 
