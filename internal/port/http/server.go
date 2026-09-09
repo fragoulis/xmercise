@@ -31,14 +31,10 @@ func (s *Server) CreateCompany(
 	ctx context.Context,
 	request CreateCompanyRequestObject,
 ) (CreateCompanyResponseObject, error) {
-	if request.Body == nil {
-		return createBadRequest("request body is required"), nil
-	}
-
 	created, err := s.companies.Create(ctx, appcompany.CreateCommand{
 		Name:           request.Body.Name,
 		Description:    nullableValue(request.Body.Description),
-		EmployeesCount: int32Value(request.Body.EmployeesCount),
+		EmployeesCount: int(request.Body.EmployeesCount),
 		Registered:     request.Body.Registered,
 		Type:           request.Body.Type,
 	})
@@ -63,11 +59,14 @@ func (s *Server) UpdateCompany(
 	}
 
 	command := appcompany.UpdateCommand{
-		ID:          request.Id,
-		Name:        body.Name,
-		Description: descriptionPatch(body.Description),
-		Registered:  body.Registered,
-		Type:        body.Type,
+		ID:   request.Id,
+		Name: body.Name,
+		Description: domaincompany.DescriptionPatch{
+			Present: body.Description.IsSpecified(),
+			Value:   nullableValue(body.Description),
+		},
+		Registered: body.Registered,
+		Type:       body.Type,
 	}
 	if body.EmployeesCount != nil {
 		command.EmployeesCount = lo.ToPtr(int(*body.EmployeesCount))
@@ -131,27 +130,12 @@ func (s *Server) GetCompany(
 	return GetCompany200JSONResponse(companyResponse(found)), nil
 }
 
-func int32Value(value *int32) *int {
-	if value == nil {
-		return nil
-	}
-
-	return lo.ToPtr(int(*value))
-}
-
 func nullableValue(value nullable.Nullable[string]) *string {
 	if !value.IsSpecified() || value.IsNull() {
 		return nil
 	}
 
 	return lo.ToPtr(value.MustGet())
-}
-
-func descriptionPatch(value nullable.Nullable[string]) domaincompany.DescriptionPatch {
-	return domaincompany.DescriptionPatch{
-		Present: value.IsSpecified(),
-		Value:   nullableValue(value),
-	}
 }
 
 func companyResponse(company *domaincompany.Company) Company {
@@ -225,12 +209,6 @@ func validationError(err error) (Error, bool) {
 	response := errorResponse(400, "Invalid request", "")
 	response.Violations = &violations
 	return response, true
-}
-
-func createBadRequest(detail string) CreateCompany400JSONResponse {
-	return CreateCompany400JSONResponse{
-		BadRequestJSONResponse: BadRequestJSONResponse(errorResponse(400, "Invalid request", detail)),
-	}
 }
 
 func updateBadRequest(detail string) UpdateCompany400JSONResponse {

@@ -17,10 +17,10 @@ const (
 func validateCreateCommand(command CreateCommand) error {
 	violations := requiredCreateViolations(command)
 	violations = append(violations, validateCompanyFields(
-		command.Name,
+		&command.Name,
 		command.Description,
-		command.EmployeesCount,
-		command.Type,
+		&command.EmployeesCount,
+		&command.Type,
 	)...)
 
 	return validationError(violations)
@@ -28,25 +28,13 @@ func validateCreateCommand(command CreateCommand) error {
 
 func requiredCreateViolations(command CreateCommand) []Violation {
 	var violations []Violation
-	if command.Name == nil {
+	if strings.TrimSpace(command.Name) == "" {
 		violations = append(violations, Violation{
 			Field:   "name",
 			Message: "is required",
 		})
 	}
-	if command.EmployeesCount == nil {
-		violations = append(violations, Violation{
-			Field:   "employees_count",
-			Message: "is required",
-		})
-	}
-	if command.Registered == nil {
-		violations = append(violations, Violation{
-			Field:   "registered",
-			Message: "is required",
-		})
-	}
-	if command.Type == nil {
+	if strings.TrimSpace(command.Type) == "" {
 		violations = append(violations, Violation{
 			Field:   "type",
 			Message: "is required",

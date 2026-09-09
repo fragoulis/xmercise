@@ -22,11 +22,11 @@ func TestServiceCreatePersistsCompanyAndOutboxEvent(t *testing.T) {
 	description := "shipping"
 
 	created, err := service.Create(ctx, appcompany.CreateCommand{
-		Name:           lo.ToPtr("Acme"),
+		Name:           "Acme",
 		Description:    &description,
-		EmployeesCount: lo.ToPtr(7),
-		Registered:     lo.ToPtr(true),
-		Type:           lo.ToPtr("Corporations"),
+		EmployeesCount: 7,
+		Registered:     true,
+		Type:           "Corporations",
 	})
 	if err != nil {
 		t.Fatalf("create company: %v", err)
@@ -45,6 +45,30 @@ func TestServiceCreatePersistsCompanyAndOutboxEvent(t *testing.T) {
 	}
 	if payload.Data["name"] != "Acme" {
 		t.Fatalf("payload data = %#v, want company after-state", payload.Data)
+	}
+}
+
+func TestServiceAcceptsAllCompanyTypes(t *testing.T) {
+	ctx := context.Background()
+	companyTypes := []companydomain.Type{
+		companydomain.TypeCorporations,
+		companydomain.TypeNonProfit,
+		companydomain.TypeCooperative,
+		companydomain.TypeSoleProprietorship,
+	}
+
+	for _, companyType := range companyTypes {
+		t.Run(string(companyType), func(t *testing.T) {
+			service := appcompany.NewService(newMemoryStore())
+			_, err := service.Create(ctx, appcompany.CreateCommand{
+				Name:           "Acme",
+				EmployeesCount: 1,
+				Type:           string(companyType),
+			})
+			if err != nil {
+				t.Fatalf("create company with type %q: %v", companyType, err)
+			}
+		})
 	}
 }
 
@@ -137,12 +161,12 @@ func TestServiceValidatesCommands(t *testing.T) {
 	longName := strings.Repeat("é", 16)
 
 	_, err := service.Create(ctx, appcompany.CreateCommand{
-		Name:           &longName,
+		Name:           longName,
 		Description:    &longDescription,
-		EmployeesCount: lo.ToPtr(-1),
-		Type:           lo.ToPtr("LLC"),
+		EmployeesCount: -1,
+		Type:           "LLC",
 	})
-	assertViolations(t, err, "name", "description", "employees_count", "registered", "type")
+	assertViolations(t, err, "name", "description", "employees_count", "type")
 
 	_, err = service.Update(ctx, appcompany.UpdateCommand{
 		Name:           lo.ToPtr(" "),

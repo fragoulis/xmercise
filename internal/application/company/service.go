@@ -38,11 +38,11 @@ type Tx interface {
 
 // CreateCommand contains data for creating a company.
 type CreateCommand struct {
-	Name           *string
+	Name           string
 	Description    *string
-	EmployeesCount *int
-	Registered     *bool
-	Type           *string
+	EmployeesCount int
+	Registered     bool
+	Type           string
 }
 
 // UpdateCommand contains patch data for a company.
@@ -84,11 +84,11 @@ func (s *Service) Create(ctx context.Context, command CreateCommand) (*companydo
 	}
 
 	created, event := companydomain.New(companydomain.CreateInput{
-		Name:           *command.Name,
+		Name:           command.Name,
 		Description:    command.Description,
-		EmployeesCount: *command.EmployeesCount,
-		Registered:     *command.Registered,
-		Type:           companydomain.Type(*command.Type),
+		EmployeesCount: command.EmployeesCount,
+		Registered:     command.Registered,
+		Type:           companydomain.Type(command.Type),
 	})
 
 	if err := s.store.WithinTx(ctx, func(ctx context.Context, tx Tx) error {

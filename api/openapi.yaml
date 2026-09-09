@@ -162,6 +162,11 @@ components:
     CreateCompanyRequest:
       type: object
       additionalProperties: false
+      required:
+        - name
+        - employees_count
+        - registered
+        - type
       properties:
         name:
           type: string

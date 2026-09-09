@@ -42,6 +42,14 @@ func TestJSONHandlerReturnsJSONErrors(t *testing.T) {
 			wantField:  "name",
 		},
 		{
+			name:       "invalid company type",
+			method:     http.MethodPost,
+			path:       "/v1/companies",
+			body:       `{"name":"Acme","employees_count":1,"registered":false,"type":"LLC"}`,
+			wantStatus: http.StatusBadRequest,
+			wantField:  "type",
+		},
+		{
 			name:       "malformed JSON",
 			method:     http.MethodPost,
 			path:       "/v1/companies",

@@ -38,16 +38,16 @@ type CreateCompanyRequest struct {
 	Description nullable.Nullable[string] `json:"description,omitempty"`
 
 	// EmployeesCount Required.
-	EmployeesCount *int32 `json:"employees_count,omitempty"`
+	EmployeesCount int32 `json:"employees_count"`
 
 	// Name Required.
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// Registered Required.
-	Registered *bool `json:"registered,omitempty"`
+	Registered bool `json:"registered"`
 
 	// Type Required.
-	Type *string `json:"type,omitempty"`
+	Type string `json:"type"`
 }
 
 // Error defines model for Error.
