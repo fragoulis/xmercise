@@ -18,6 +18,9 @@ go.work.sum
 # Dependency directories
 vendor/
 
+# Local build output
+/tmp/
+
 # Local environment and project files
 .env
 TASKS.md

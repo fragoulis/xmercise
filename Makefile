@@ -29,6 +29,10 @@ deps:
 run:
 	go run ./cmd/exercise
 
+.PHONY: dev
+dev: ## Run the service with live reload.
+	air
+
 .PHONY: db-shell
 db-shell:
 	docker compose exec postgres sh -lc 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"'

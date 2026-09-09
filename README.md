@@ -24,6 +24,12 @@ Install `golangci-lint` if needed:
 go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 ```
 
+Install Air for live reload during local development:
+
+```sh
+go install github.com/air-verse/air@latest
+```
+
 ## Configure environment
 
 You can configure the application via environment variables and configuration file.
@@ -79,6 +85,12 @@ make run
 ```
 
 same as `go run ./cmd/exercise`.
+
+For live reload during local development:
+
+```sh
+make dev
+```
 
 or to use the config with your overrides:
 
