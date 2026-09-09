@@ -15,11 +15,9 @@ export COMPANIES_JWT_AUDIENCE
 generate:
 	go generate ./api
 
-IMAGE ?= companies
-
 .PHONY: build
 build: ## Build the Docker image.
-	docker build --tag "$(IMAGE)" .
+	docker build --tag exercise .
 
 .PHONY: deps
 deps:
