@@ -11,20 +11,24 @@ import (
 
 func TestLoad(t *testing.T) {
 	tests := map[string]struct {
-		logFormat  string
-		logLevel   string
-		wantFormat config.LogFormat
-		wantLevel  slog.Level
+		authEnabled string
+		logFormat   string
+		logLevel    string
+		wantAuth    bool
+		wantFormat  config.LogFormat
+		wantLevel   slog.Level
 	}{
 		"defaults": {
+			wantAuth:   true,
 			wantFormat: config.LogFormatText,
 			wantLevel:  slog.LevelInfo,
 		},
 		"loads configured values": {
-			logFormat:  "json",
-			logLevel:   "debug",
-			wantFormat: config.LogFormatJSON,
-			wantLevel:  slog.LevelDebug,
+			authEnabled: "false",
+			logFormat:   "json",
+			logLevel:    "debug",
+			wantFormat:  config.LogFormatJSON,
+			wantLevel:   slog.LevelDebug,
 		},
 	}
 
@@ -33,12 +37,16 @@ func TestLoad(t *testing.T) {
 			t.Setenv("COMPANIES_HTTP_ADDR", ":8080")
 			t.Setenv("COMPANIES_DATABASE_URL", "postgres://companies:companies@localhost/companies")
 			t.Setenv("COMPANIES_JWT_SECRET", "secret")
+			t.Setenv("COMPANIES_AUTH_ENABLED", test.authEnabled)
 			t.Setenv("COMPANIES_LOG_FORMAT", test.logFormat)
 			t.Setenv("COMPANIES_LOG_LEVEL", test.logLevel)
 
 			cfg, err := config.Load("")
 			if err != nil {
 				t.Fatalf("Load() error = %v", err)
+			}
+			if cfg.AuthEnabled != test.wantAuth {
+				t.Errorf("AuthEnabled = %t, want %t", cfg.AuthEnabled, test.wantAuth)
 			}
 			if cfg.LogFormat != test.wantFormat {
 				t.Errorf("LogFormat = %q, want %q", cfg.LogFormat, test.wantFormat)
@@ -50,12 +58,26 @@ func TestLoad(t *testing.T) {
 	}
 }
 
+func TestLoadAllowsDisabledAuthenticationWithoutJWTSecret(t *testing.T) {
+	t.Setenv("COMPANIES_HTTP_ADDR", ":8080")
+	t.Setenv("COMPANIES_DATABASE_URL", "postgres://companies:companies@localhost/companies")
+	t.Setenv("COMPANIES_AUTH_ENABLED", "false")
+
+	cfg, err := config.Load("")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.AuthEnabled {
+		t.Error("AuthEnabled = true, want false")
+	}
+}
+
 func TestLoadFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	contents := []byte(`
 http_addr: ":8080"
 database_url: "postgres://companies:companies@localhost/companies"
-jwt_secret: "secret"
+auth_enabled: false
 log_level: debug
 `)
 	if err := os.WriteFile(path, contents, 0o600); err != nil {
@@ -66,12 +88,15 @@ log_level: debug
 	if err != nil {
 		t.Fatalf("Load() error = %v", err)
 	}
+	if cfg.AuthEnabled {
+		t.Error("AuthEnabled = true, want false")
+	}
 	if cfg.LogLevel != slog.LevelDebug {
 		t.Errorf("LogLevel = %v, want %v", cfg.LogLevel, slog.LevelDebug)
 	}
 }
 
-func TestLoadRejectsInvalidLoggingConfiguration(t *testing.T) {
+func TestLoadRejectsInvalidConfiguration(t *testing.T) {
 	tests := map[string]struct {
 		name  string
 		value string
@@ -83,6 +108,10 @@ func TestLoadRejectsInvalidLoggingConfiguration(t *testing.T) {
 		"level": {
 			name:  "COMPANIES_LOG_LEVEL",
 			value: "verbose",
+		},
+		"authentication": {
+			name:  "COMPANIES_AUTH_ENABLED",
+			value: "sometimes",
 		},
 	}
 

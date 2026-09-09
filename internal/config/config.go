@@ -4,6 +4,7 @@ package config
 import (
 	"fmt"
 	"log/slog"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -24,6 +25,7 @@ type Config struct {
 	HTTPAddr    string
 	DatabaseURL string
 	JWTSecret   string
+	AuthEnabled bool
 	LogFormat   LogFormat
 	LogLevel    slog.Level
 }
@@ -34,6 +36,7 @@ func Load(path string) (Config, error) {
 	loader.SetEnvPrefix("COMPANIES")
 	loader.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	loader.AutomaticEnv()
+	loader.SetDefault("auth_enabled", true)
 	loader.SetDefault("log_format", LogFormatText)
 	loader.SetDefault("log_level", slog.LevelInfo.String())
 
@@ -57,10 +60,16 @@ func Load(path string) (Config, error) {
 		return Config{}, fmt.Errorf("parse log level: %w", err)
 	}
 
+	authEnabled, err := strconv.ParseBool(strings.TrimSpace(loader.GetString("auth_enabled")))
+	if err != nil {
+		return Config{}, fmt.Errorf("parse auth enabled: %w", err)
+	}
+
 	cfg := Config{
 		HTTPAddr:    loader.GetString("http_addr"),
 		DatabaseURL: loader.GetString("database_url"),
 		JWTSecret:   loader.GetString("jwt_secret"),
+		AuthEnabled: authEnabled,
 		LogFormat:   logFormat,
 		LogLevel:    logLevel,
 	}
@@ -82,6 +91,10 @@ func Load(path string) (Config, error) {
 			value: cfg.JWTSecret,
 		},
 	}
+	if !cfg.AuthEnabled {
+		required = required[:len(required)-1]
+	}
+
 	missing := make([]string, 0, len(required))
 	for _, setting := range required {
 		if strings.TrimSpace(setting.value) == "" {

@@ -2,8 +2,6 @@
 # Exercise one success case and one validation failure for every API operation.
 set -eu
 
-: "${TOKEN:?TOKEN must contain a valid bearer JWT}"
-
 base_url=${BASE_URL:-http://localhost:8080}
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT HUP INT TERM
@@ -12,11 +10,13 @@ request() {
 	request_name=$1
 	expected_status=$2
 	shift 2
+	if [ -n "${TOKEN:-}" ]; then
+		set -- --header "Authorization: Bearer $TOKEN" "$@"
+	fi
 
 	status=$(curl --silent --show-error \
 		--output "$tmpdir/$request_name.json" \
 		--write-out '%{http_code}' \
-		--header "Authorization: Bearer $TOKEN" \
 		"$@")
 
 	if [ "$status" != "$expected_status" ]; then
