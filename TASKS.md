@@ -22,3 +22,5 @@
 [x] Validate HTTP company IDs in the application layer and return JSON errors
 [x] Add GitHub Actions lint and test CI
 [x] Add local debug logging config file
+[x] Build Docker image locally and in CI
+[x] Add main-only publish-artifacts CI placeholder

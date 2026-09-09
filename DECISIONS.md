@@ -84,4 +84,5 @@
   - Makefile owns common local development commands.
 - Tests: use testcontainers for integration tests. Tests must not rely on externally running dependencies.
 - Linting: golangci-lint.
-- CI: GitHub Actions runs lint and tests on pushes and pull requests.
+- CI: GitHub Actions runs lint, tests, and a Docker image build on pushes and pull requests.
+  - A placeholder publish-artifacts job runs only for pushes to `main` after the image build.

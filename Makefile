@@ -1,7 +1,7 @@
 SHELL := /bin/sh
 .DEFAULT_GOAL := help
 
-include .env
+-include .env
 
 export COMPANIES_HTTP_ADDR
 export COMPANIES_DATABASE_URL
@@ -14,6 +14,12 @@ export COMPANIES_JWT_AUDIENCE
 .PHONY: generate
 generate: ## Generate HTTP port from the OpenAPI contract.
 	go generate ./api
+
+IMAGE ?= companies
+
+.PHONY: build
+build: ## Build the Docker image.
+	docker build --tag "$(IMAGE)" .
 
 .PHONY: deps
 deps: ## Start local dependencies.

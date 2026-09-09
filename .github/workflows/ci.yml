@@ -27,3 +27,17 @@ jobs:
         with:
           go-version-file: go.mod
       - run: go test ./...
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make build
+
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish artifacts
+        run: echo "Publishing artifacts"
