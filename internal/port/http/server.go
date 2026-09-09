@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-
 	"github.com/oapi-codegen/nullable"
 	"github.com/samber/lo"
 
