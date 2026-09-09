@@ -15,33 +15,12 @@ const (
 )
 
 func validateCreateCommand(command CreateCommand) error {
-	violations := requiredCreateViolations(command)
-	violations = append(violations, validateCompanyFields(
+	return validationError(validateCompanyFields(
 		&command.Name,
 		command.Description,
 		&command.EmployeesCount,
 		&command.Type,
-	)...)
-
-	return validationError(violations)
-}
-
-func requiredCreateViolations(command CreateCommand) []Violation {
-	var violations []Violation
-	if strings.TrimSpace(command.Name) == "" {
-		violations = append(violations, Violation{
-			Field:   "name",
-			Message: "is required",
-		})
-	}
-	if strings.TrimSpace(command.Type) == "" {
-		violations = append(violations, Violation{
-			Field:   "type",
-			Message: "is required",
-		})
-	}
-
-	return violations
+	))
 }
 
 func validateUpdateCommand(command UpdateCommand) (uuid.UUID, error) {
@@ -136,11 +115,19 @@ func validateCompanyFields(
 			Message: "must be greater than or equal to 0",
 		})
 	}
-	if companyType != nil && !validCompanyType(*companyType) {
-		violations = append(violations, Violation{
-			Field:   "type",
-			Message: "is invalid",
-		})
+	if companyType != nil {
+		switch {
+		case strings.TrimSpace(*companyType) == "":
+			violations = append(violations, Violation{
+				Field:   "type",
+				Message: "is required",
+			})
+		case !validCompanyType(*companyType):
+			violations = append(violations, Violation{
+				Field:   "type",
+				Message: "is invalid",
+			})
+		}
 	}
 
 	return violations

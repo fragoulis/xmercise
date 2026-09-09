@@ -194,6 +194,12 @@ func updateErrorResponse(err error) (UpdateCompanyResponseObject, error) {
 	return nil, err
 }
 
+func updateBadRequest(detail string) UpdateCompany400JSONResponse {
+	return UpdateCompany400JSONResponse{
+		BadRequestJSONResponse: BadRequestJSONResponse(errorResponse(400, "Invalid request", detail)),
+	}
+}
+
 func validationError(err error) (Error, bool) {
 	var validation appcompany.ValidationError
 	if !errors.As(err, &validation) {
@@ -209,12 +215,6 @@ func validationError(err error) (Error, bool) {
 	response := errorResponse(400, "Invalid request", "")
 	response.Violations = &violations
 	return response, true
-}
-
-func updateBadRequest(detail string) UpdateCompany400JSONResponse {
-	return UpdateCompany400JSONResponse{
-		BadRequestJSONResponse: BadRequestJSONResponse(errorResponse(400, "Invalid request", detail)),
-	}
 }
 
 // NewJSONStrictHandler creates a strict handler with JSON error responses.

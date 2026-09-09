@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -19,12 +20,14 @@ func TestJSONHandlerReturnsJSONErrors(t *testing.T) {
 	)
 
 	tests := []struct {
-		name       string
-		method     string
-		path       string
-		body       string
-		wantStatus int
-		wantField  string
+		name           string
+		method         string
+		path           string
+		body           string
+		contentType    string
+		wantStatus     int
+		wantField      string
+		wantViolations []violation
 	}{
 		{
 			name:       "invalid company ID",
@@ -40,6 +43,16 @@ func TestJSONHandlerReturnsJSONErrors(t *testing.T) {
 			body:       "{}",
 			wantStatus: http.StatusBadRequest,
 			wantField:  "name",
+			wantViolations: []violation{
+				{
+					Field:   "name",
+					Message: "is required",
+				},
+				{
+					Field:   "type",
+					Message: "is required",
+				},
+			},
 		},
 		{
 			name:       "invalid company type",
@@ -57,6 +70,14 @@ func TestJSONHandlerReturnsJSONErrors(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
+			name:        "patch with curl default content type",
+			method:      http.MethodPatch,
+			path:        "/v1/companies/c9f77fb9-5410-4086-a17d-9a90f31c132e",
+			body:        `{"description":"foo bar"}`,
+			contentType: "application/x-www-form-urlencoded",
+			wantStatus:  http.StatusBadRequest,
+		},
+		{
 			name:       "unknown route",
 			method:     http.MethodGet,
 			path:       "/unknown",
@@ -67,7 +88,9 @@ func TestJSONHandlerReturnsJSONErrors(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			request := httptest.NewRequest(test.method, test.path, strings.NewReader(test.body))
-			if test.body != "" {
+			if test.contentType != "" {
+				request.Header.Set("Content-Type", test.contentType)
+			} else if test.body != "" {
 				request.Header.Set("Content-Type", "application/json")
 			}
 			response := httptest.NewRecorder()
@@ -90,6 +113,9 @@ func TestJSONHandlerReturnsJSONErrors(t *testing.T) {
 			}
 			if test.wantField != "" && !containsViolation(body.Violations, test.wantField) {
 				t.Fatalf("violations = %#v, want %q", body.Violations, test.wantField)
+			}
+			if test.wantViolations != nil && !reflect.DeepEqual(body.Violations, test.wantViolations) {
+				t.Fatalf("violations = %#v, want %#v", body.Violations, test.wantViolations)
 			}
 		})
 	}

@@ -17,7 +17,7 @@ generate:
 	go generate ./api
 
 .PHONY: build
-build: ## Build the Docker image.
+build:
 	docker build --tag exercise .
 
 .PHONY: deps
@@ -29,7 +29,7 @@ run:
 	go run ./cmd/exercise
 
 .PHONY: dev
-dev: ## Run the service with live reload.
+dev:
 	air
 
 .PHONY: db-shell
