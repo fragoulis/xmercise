@@ -24,25 +24,29 @@ go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 ## Configure environment
 
+You can configure the application via environment variables and configuration file.
+
+The precedence goes:
+
+ 1. COMPANIES_* environment variables
+ 2. Values in config.yaml
+ 3. Built-in defaults
+
 Copy the example environment file:
 
 ```sh
 cp .env.example .env
 ```
 
-Set `COMPANIES_LOG_FORMAT` to `text` or `json`. It defaults to `text`. Set `COMPANIES_LOG_LEVEL` to `DEBUG`,
-`INFO`, `WARN`, or `ERROR`. It defaults to `INFO`.
-
-`config.yaml` sets the log level to `debug` for local development. Run the service with it:
-
 ```sh
-make run CONFIG=config.yaml
+make run
+# go run ./cmd/exercise
 ```
 
-`COMPANIES_LOG_LEVEL` overrides the file value:
+or
 
 ```sh
-make run CONFIG=config.yaml COMPANIES_LOG_LEVEL=info
+go run ./cmd/exercise --config config.yaml
 ```
 
 ## Generate the HTTP port

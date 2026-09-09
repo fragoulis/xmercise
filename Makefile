@@ -12,7 +12,7 @@ export COMPANIES_JWT_ISSUER
 export COMPANIES_JWT_AUDIENCE
 
 .PHONY: generate
-generate: ## Generate HTTP port from the OpenAPI contract.
+generate:
 	go generate ./api
 
 IMAGE ?= companies
@@ -22,14 +22,12 @@ build: ## Build the Docker image.
 	docker build --tag "$(IMAGE)" .
 
 .PHONY: deps
-deps: ## Start local dependencies.
+deps:
 	docker compose up
 
-CONFIG ?=
-
 .PHONY: run
-run: ## Run the service.
-	go run ./cmd/exercise $(if $(CONFIG),--config "$(CONFIG)")
+run:
+	go run ./cmd/exercise
 
 .PHONY: db-shell
 db-shell:
