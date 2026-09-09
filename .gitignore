@@ -1,4 +1,28 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binaries and coverage output
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# Go workspace files
+go.work
+go.work.sum
+
+# Dependency directories
+vendor/
+
+# Local environment and project files
+.env
 TASKS.md
 DECISIONS.md
 AGENTS.md
-.env
+
+# OS files
+.DS_Store
