@@ -10,7 +10,7 @@ Microservice for managing companies.
 - `goose` migration CLI
 - `golangci-lint` linter
 
-Install `goose` if needed:
+Install `goose` (required to run database migrations):
 
 ```sh
 go install github.com/pressly/goose/v3/cmd/goose@latest
@@ -18,7 +18,7 @@ go install github.com/pressly/goose/v3/cmd/goose@latest
 
 ### Optional
 
-Install `golangci-lint` if needed:
+Install `golangci-lint` to run the linter locally:
 
 ```sh
 go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
@@ -40,13 +40,13 @@ The precedence goes:
  2. Values in config.yaml
  3. Built-in defaults
 
-Optionally, you can opy the example environment file:
+Optionally, you can copy the example environment file:
 
 ```sh
 cp .env.example .env
 ```
 
-This is helpful if using environment variables.
+This is helpful if using environment variables to configure the environement instead of the configuration file.
 
 ## Generate the HTTP port
 
